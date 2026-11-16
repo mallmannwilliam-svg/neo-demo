@@ -1827,7 +1827,7 @@ syncThemeBtn();
 
 window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(h!==S.tab) go(h)});
 /* ---------- rastreamento de uso: só no endereço próprio (GitHub Pages) e com a chave do PostHog ---------- */
-const PH={key:'',host:'https://us.i.posthog.com'};
+const PH={key:'phc_sWW65Pd3Lyeuiu5kNZAkyLU7436BYNQkgoVMX7EiGqy6',host:'https://us.i.posthog.com'};
 const TRACK=!!PH.key&&/\.github\.io$/.test(location.hostname);
 let tabCur=null,tabT0=Date.now();
 function track(ev,props){if(TRACK&&window.posthog) window.posthog.capture(ev,Object.assign({plano:S.premium?'premium':'gratuito'},props||{}))}
