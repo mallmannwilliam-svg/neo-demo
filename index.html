@@ -1,0 +1,1848 @@
+<meta charset="utf-8">
+<title>NEO · Protótipo v3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: app de desktop com barra lateral fixa, barra superior com os seletores de plano e tema, e uma área de conteúdo em grade de cards */
+:root{
+  --bg:#EEF1F0; --surface:#FFFFFF; --surface-2:#F3F6F5; --line:#E2E7E5; --ink:#14161A; --muted:#5F6663;
+  --brand:#0A7A52; --brand-ink:#FFFFFF; --brand-soft:#DDF7EC; --accent:#1AE299; --btn-bg:#14161A; --btn-ink:#FFFFFF;
+  --good:#2563B8; --good-soft:#E3ECF9;
+  --pos:#0A7A52; --pos-soft:#DDF7EC; --neg:#B42335; --neg-soft:#F8E3E6; --warn:#9A5A06; --warn-soft:#FBEFD9;
+  --shade:rgba(20,22,26,.07);
+  --f-display:"Inter", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B0D0F; --surface:#171A1E; --surface-2:#1F2429; --line:#272C31; --ink:#F4F9F7; --muted:#98A19D;
+  --brand:#1AE299; --brand-ink:#14161A; --brand-soft:#12352A; --accent:#1AE299; --btn-bg:#1AE299; --btn-ink:#14161A;
+  --good:#7FB2F5; --good-soft:#172A44;
+  --pos:#1AE299; --pos-soft:#12352A; --neg:#F07A86; --neg-soft:#3A1A20; --warn:#E7B35A; --warn-soft:#3A2C12;
+  --shade:rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B0D0F; --surface:#171A1E; --surface-2:#1F2429; --line:#272C31; --ink:#F4F9F7; --muted:#98A19D;
+  --brand:#1AE299; --brand-ink:#14161A; --brand-soft:#12352A; --accent:#1AE299; --btn-bg:#1AE299; --btn-ink:#14161A;
+  --good:#7FB2F5; --good-soft:#172A44;
+  --pos:#1AE299; --pos-soft:#12352A; --neg:#F07A86; --neg-soft:#3A1A20; --warn:#E7B35A; --warn-soft:#3A2C12;
+  --shade:rgba(0,0,0,.35); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.2;text-wrap:balance}
+h1{font-size:1.6rem;font-weight:800;letter-spacing:-.01em}
+h2{font-size:1.05rem;font-weight:700}
+h3{font-size:.95rem;font-weight:700}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.muted{color:var(--muted)}
+.grow{flex:1;min-width:0}
+.small{font-size:.82rem}
+.pos{color:var(--pos)} .neg{color:var(--neg)} .warn{color:var(--warn)}
+
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100%}
+.side{background:var(--surface);border-right:1px solid var(--line);padding:22px 14px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh}
+.logo{font-family:var(--f-display);font-weight:800;font-size:1.5rem;letter-spacing:.08em;padding:0 10px;display:flex;align-items:center;gap:10px}
+.logo i{width:26px;height:26px;border-radius:7px;background:var(--brand);display:inline-block;position:relative}
+.logo i::after{content:"";position:absolute;inset:7px;border:2px solid var(--brand-ink);border-radius:3px}
+nav{display:flex;flex-direction:column;gap:4px}
+.nav-btn{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;border:0;background:none;text-align:left;font-weight:500;color:var(--muted)}
+.nav-btn svg{width:19px;height:19px;flex:none}
+.nav-btn:hover{background:var(--surface-2);color:var(--ink)}
+.nav-btn[aria-current="page"]{background:var(--brand-soft);color:var(--brand);font-weight:600}
+.nav-btn .lk{margin-left:auto;width:14px;height:14px;opacity:.8}
+.side-foot{margin-top:auto;font-size:.78rem;color:var(--muted);padding:0 10px;display:flex;flex-direction:column;gap:6px}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.demo-bar{background:var(--warn-soft);color:var(--warn);font-size:.8rem;padding-block:6px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:14px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--surface)}
+.top .who{display:flex;align-items:center;gap:10px;margin-left:auto}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-weight:600;font-size:.8rem}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface-2)}
+.seg button{border:0;background:none;padding:5px 14px;border-radius:999px;font-size:.85rem;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px var(--shade)}
+.seg-label{font-size:.78rem;color:var(--muted)}
+.ctl{display:flex;align-items:center;gap:8px}
+.btn-ghost{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:.85rem}
+.btn-ghost:hover{background:var(--surface-2)}
+.badge-plan{font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+.badge-plan.premium{background:var(--brand-soft);color:var(--brand)}
+
+.content{padding-block:26px 48px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px;max-width:1840px;width:100%}
+.page-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.page-head p{color:var(--muted)}
+.page-head .right{margin-left:auto}
+
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g-main{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+.span2{grid-column:span 2}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.card-head{display:flex;align-items:center;gap:10px}
+.card-head .right{margin-left:auto}
+.kpi .label{font-size:.8rem;color:var(--muted)}
+.kpi .val{font-family:var(--f-display);font-size:1.45rem;font-weight:700;letter-spacing:-.01em}
+.kpi .val small{font-size:.7em;font-weight:600}
+.kpi .sub{font-size:.8rem;color:var(--muted)}
+.link{border:0;background:none;color:var(--brand);font-weight:600;padding:0;font-size:.85rem}
+.link:hover{text-decoration:underline}
+.btn{border:0;border-radius:8px;padding:9px 16px;font-weight:600;font-size:.88rem;background:var(--brand);color:var(--brand-ink)}
+.btn:hover{filter:brightness(1.08)}
+.btn.sec{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.chip.pos{background:var(--pos-soft);color:var(--pos)} .chip.neg{background:var(--neg-soft);color:var(--neg)} .chip.warn{background:var(--warn-soft);color:var(--warn)} .chip.brand{background:var(--brand-soft);color:var(--brand)}
+
+.rows{display:flex;flex-direction:column}
+.row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0;padding-top:0}
+.row .grow{flex:1;min-width:0}
+.row .t{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s{font-size:.8rem;color:var(--muted)}
+.row .amt{font-weight:600;white-space:nowrap}
+.ico{width:34px;height:34px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;font-size:.72rem;font-weight:700;color:var(--muted);flex:none}
+
+.tbl-box{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th{text-align:left;font-size:.74rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;white-space:nowrap}
+tr.rec td{background:var(--brand-soft)}
+
+/* bloqueio Premium */
+.lockwrap{position:relative;min-width:0}
+.lockwrap.is-locked>.lock-content{filter:blur(6px);opacity:.55;pointer-events:none;user-select:none}
+.lock-over{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;z-index:2}
+.lock-box{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px var(--shade);padding:16px 18px;max-width:340px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.lock-box .lk-t{display:flex;gap:8px;align-items:center;font-weight:600;font-family:var(--f-display)}
+.lock-box svg{width:18px;height:18px;color:var(--brand)}
+.lock-box p{font-size:.88rem;color:var(--muted)}
+
+/* gráficos */
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar-row{display:grid;grid-template-columns:130px 1fr 96px;gap:10px;align-items:center;font-size:.86rem}
+.bar-track{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;background:var(--brand);border-radius:99px}
+.bar-fill.neg{background:var(--neg)}
+svg text{font-family:var(--f-body)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:3px;border-radius:2px;display:inline-block}
+
+/* score */
+.score-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.comp{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:.84rem}
+.meter{grid-column:1/-1;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-bottom:6px}
+.meter b{display:block;height:100%}
+
+/* pendências de categoria */
+.pend{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.pend-item{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.opts{display:flex;gap:6px;flex-wrap:wrap}
+.opt{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:.8rem}
+.opt:hover{border-color:var(--brand);color:var(--brand)}
+
+/* chat */
+.chat-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.chat{display:flex;flex-direction:column;min-height:560px}
+.msgs{display:flex;flex-direction:column;gap:16px;padding:4px 2px 18px}
+.msg{max-width:min(720px,92%);display:flex;flex-direction:column;gap:10px}
+.msg.user{align-self:flex-end;background:var(--brand);color:var(--brand-ink);padding:10px 14px;border-radius:14px 14px 4px 14px}
+.msg.bot{align-self:flex-start}
+.msg.bot .who-l{font-size:.75rem;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px}
+.msg.bot .bubble{background:var(--surface-2);border:1px solid var(--line);padding:12px 14px;border-radius:4px 14px 14px 14px;display:flex;flex-direction:column;gap:10px}
+.msg.bot table{font-size:.83rem;background:var(--surface);border-radius:8px}
+.composer{margin-top:auto;display:flex;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.composer input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);color:var(--ink);font:inherit}
+.sugs{display:flex;gap:8px;flex-wrap:wrap}
+.check{display:flex;gap:8px;align-items:center;font-size:.85rem}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--line);flex:none}
+.dot.ok{background:var(--pos)}
+.wa{background:var(--surface-2);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:.85rem}
+.wa .b{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+
+/* objetivos */
+.goal{border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.goal-top{display:flex;align-items:flex-start;gap:10px}
+.goal-top .right{margin-left:auto}
+.prog{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.prog b{display:block;height:100%;background:var(--brand)}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;font-size:.84rem}
+.facts div{display:flex;flex-direction:column}
+.facts b{font-weight:600}
+.choice{background:var(--warn-soft);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.choice .opts2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.choice button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.choice button:hover{border-color:var(--brand)}
+.choice button b{font-weight:600}
+
+/* crédito */
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:grid;grid-template-columns:28px 1fr;gap:12px;padding-bottom:14px;position:relative}
+.step::before{content:"";position:absolute;left:13px;top:26px;bottom:0;width:2px;background:var(--line)}
+.step:last-child::before{display:none}
+.step .n{width:28px;height:28px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-weight:700;font-size:.8rem}
+.debt{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;background:var(--surface);text-align:left;width:100%}
+.debt[aria-pressed="true"]{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand) inset}
+.drop{border:1.5px dashed var(--line);border-radius:10px;padding:16px;text-align:center;color:var(--muted);font-size:.86rem}
+.compare{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;text-align:center}
+.compare .big{font-family:var(--f-display);font-size:1.5rem;font-weight:700}
+
+/* marketplace */
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:.86rem;font-weight:500}
+.pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.fopts{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.fopt{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:12px 14px;text-align:left;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.fopt:hover{border-color:var(--brand)}
+.fopt.sel{border-color:var(--brand);background:var(--brand-soft)}
+.fform{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.fin{display:flex;gap:8px;width:100%;max-width:460px}
+.fin input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);color:var(--ink);font:inherit}
+.funnel h2{margin-top:4px}
+.rec-box{border:1px solid var(--brand);background:var(--brand-soft);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.rec-box ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+
+.g-score{grid-template-columns:minmax(0,1fr) minmax(0,2fr)}
+.score-num{display:flex;align-items:baseline;gap:8px}
+.score-num b{font-family:var(--f-display);font-size:3.2rem;font-weight:800;letter-spacing:-.02em;line-height:1}
+.lockwrap{display:flex;flex-direction:column}
+.lockwrap>.card,.lockwrap>.lock-content{flex:1}
+.lock-content{display:flex;flex-direction:column}
+.lock-content>.card{flex:1}
+.lockwrap.is-locked{min-height:210px}
+.card-note{margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.brand-t{color:var(--brand);font-weight:600}
+.refbar{position:relative;height:10px;background:var(--surface-2);border-radius:99px;width:170px;flex:none}
+.refbar b{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--brand)}
+.refbar b.over{background:var(--neg)}
+.refbar i{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);border-radius:1px}
+.bands{display:grid;grid-template-columns:4fr 2fr 2fr 2fr;gap:3px;position:relative}
+.bands span{height:8px;border-radius:99px}
+.bands i{position:absolute;top:-5px;width:4px;height:18px;margin-left:-2px;border-radius:2px;background:var(--ink)}
+.bands.lbl{margin-top:8px}
+.bands.lbl span{height:auto;font-size:.74rem;color:var(--muted);line-height:1.35}
+.comp-list{display:flex;flex-direction:column}
+.comp-row{display:flex;align-items:center;gap:18px;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.comp-row:first-child{border-top:0;padding-top:0}
+.comp-row .grow{flex:1;min-width:220px}
+.comp-val{width:240px;max-width:100%;display:flex;flex-direction:column;gap:6px}
+.comp-val .meter{margin:0}
+.search{border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--surface);color:var(--ink);font:inherit;width:320px;max-width:100%}
+.pf-item{display:flex;gap:10px;align-items:center;border:0;background:none;text-align:left;padding:7px 8px;border-radius:8px;width:100%;font-size:.85rem}
+.pf-item:hover{background:var(--surface-2)}
+.prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.modal-bg{position:fixed;inset:0;background:rgba(8,14,22,.6);display:grid;place-items:center;padding:16px;z-index:30}
+.modal{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;max-width:540px;width:100%;padding:22px;display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow:auto}
+.dl{display:grid;grid-template-columns:minmax(130px,auto) 1fr;gap:8px 16px;font-size:.92rem}
+.field{display:flex;flex-direction:column;gap:5px;font-size:.84rem;color:var(--muted)}
+.field input{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--surface);color:var(--ink);font:inherit}
+.field select,.field textarea{border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:var(--surface);color:var(--ink);font:inherit;resize:vertical}
+.demo-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.demo-bar .op-btn{margin-left:auto;border:1px solid currentColor;background:none;color:inherit;border-radius:999px;padding:3px 12px;font-size:.78rem;font-weight:600}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:.88rem;z-index:40;box-shadow:0 8px 24px var(--shade)}
+
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g-main,.chat-layout{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;align-items:center;padding:10px 16px;gap:12px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}
+  nav{flex-direction:row}
+  .nav-btn span.lbl{display:none}
+  .side-foot{display:none}
+  .g4,.g3,.g2,.g-score{grid-template-columns:1fr}
+  .span2{grid-column:auto}
+  .facts{grid-template-columns:1fr 1fr}
+  .bar-row{grid-template-columns:96px 1fr 84px}
+  .top .who{margin-left:0}
+}
+
+.col{display:flex;flex-direction:column;gap:16px}
+.g-home{grid-template-columns:repeat(3,minmax(0,1fr))}
+.lockwrap>.sc,.lock-content>.sc,.lockwrap>.col,.lock-content>.col{flex:1}
+.sc{background:#0f1b2d;color:#e9eef6;border:1px solid #1e2e47;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.sc-t{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#8fa3bf;font-weight:600}
+.sc-ring{align-self:center;max-width:100%}
+.sc-band{font-family:var(--f-display);font-size:1.3rem;font-weight:700;text-align:center}
+.sc-sub{text-align:center;font-size:.82rem;color:#8fa3bf;margin-top:2px}
+.sc-list{display:flex;flex-direction:column;gap:11px}
+.sc-f{display:grid;grid-template-columns:1fr auto;gap:5px 10px;font-size:.84rem;color:#c9d4e3}
+.sc-f b{color:#fff;font-weight:600;font-variant-numeric:tabular-nums}
+.sc-bar{grid-column:1/-1;height:4px;border-radius:9px;background:#22344f;overflow:hidden}
+.sc-bar i{display:block;height:100%;border-radius:9px}
+.sc-btn{margin-top:auto;border:1px solid #2c4263;background:#16263d;color:#e9eef6;border-radius:10px;padding:11px;font-weight:600;font-size:.88rem}
+.sc-btn:hover{background:#1c3050}
+.as-layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:16px;align-items:start}
+.as-side{gap:8px;padding:14px}
+.as-list{display:flex;flex-direction:column;gap:2px}
+.as-conv{display:flex;flex-direction:column;gap:1px;border:0;background:none;text-align:left;padding:8px 10px;border-radius:8px;width:100%;font-size:.86rem;color:var(--ink)}
+.as-conv .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.as-conv:hover,.as-conv[aria-current="true"]{background:var(--surface-2)}
+.as-conv[aria-current="true"] .t{font-weight:600}
+.as-empty{min-height:560px;align-items:center;justify-content:center;gap:18px;text-align:center;padding:28px 20px}
+.as-empty h2{font-family:var(--f-display);font-size:1.7rem;letter-spacing:-.01em;text-wrap:balance}
+.as-empty .composer{margin:0;border:1px solid var(--line);border-radius:14px;padding:8px;width:min(640px,100%);background:var(--surface)}
+.as-empty .composer input{border:0;background:none}
+.as-empty .sugs{justify-content:center;max-width:700px}
+.keep{display:flex;flex-direction:column;gap:6px}
+.keep button{display:flex;gap:10px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;text-align:left;font-size:.86rem;color:var(--ink)}
+.keep .box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--muted);flex:none;display:grid;place-items:center;color:var(--brand-ink)}
+.keep button[aria-pressed="true"] .box{background:var(--brand);border-color:var(--brand)}
+.keep button[aria-pressed="false"] .grow{color:var(--muted);text-decoration:line-through}
+.goal.off{opacity:.72}
+.note{display:flex;gap:14px;align-items:center;background:var(--brand-soft);border-radius:12px;padding:12px 16px;font-size:.9rem}
+@media (max-width:1100px){.g-home{grid-template-columns:1fr 1fr}.g-home>:nth-child(3){grid-column:1/-1}.as-layout{grid-template-columns:1fr}}
+@media (max-width:760px){.g-home{grid-template-columns:1fr}.g-home>:nth-child(3){grid-column:auto}.as-empty{min-height:420px}}
+
+.lbl-s,.logo-m{display:none}
+.mbars{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.mbar{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:8px}
+.mb-track{height:190px;width:100%;display:flex;align-items:flex-end}
+.mb{width:100%;border-radius:12px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;min-height:44px;border:2px solid transparent}
+.mb b{font-family:var(--f-display);font-weight:700;font-size:.95rem}
+.mb-l{font-size:.78rem;font-weight:600;color:var(--muted);padding:3px 12px;border-radius:99px;text-transform:uppercase;letter-spacing:.04em}
+.mbar:hover .mb{border-color:var(--line)}
+.mbar[aria-pressed="true"] .mb{border-color:currentColor}
+.mbar[aria-pressed="true"] .mb-l{background:var(--ink);color:var(--bg)}
+.fx-list{display:flex;flex-direction:column}
+.fx{border-top:1px solid var(--line)}
+.fx-list>.fx:first-child{border-top:0}
+.fx summary{display:flex;align-items:center;gap:14px;padding:13px 2px;cursor:pointer;list-style:none}
+.fx summary::-webkit-details-marker{display:none}
+.fx summary b{font-weight:600}
+.fx summary:hover b{color:var(--brand)}
+.fx-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+.fx .chev{color:var(--muted);flex:none}
+.fx[open] .chev{transform:scaleY(-1)}
+.fx-body{display:flex;flex-direction:column;gap:10px;padding:0 2px 16px;font-size:.9rem;max-width:760px}
+.fx-group{font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:14px 2px 2px}
+.fx-list>.fx-group:first-child{padding-top:0}
+.fx-group+.fx{border-top:0}
+.btn:disabled{opacity:.45;cursor:default}
+.over-card{border-left:4px solid var(--neg)}
+.over-tot{font-family:var(--f-display);font-size:1.5rem;font-weight:800;letter-spacing:-.01em;line-height:1.1}
+.over-list{display:flex;flex-direction:column}
+.over-row{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr) auto;gap:18px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
+.over-row b{font-weight:600}
+.refbar.wide{width:100%;height:12px}
+@media (min-width:1500px){body{font-size:16px}.content{gap:24px}}
+@media (max-width:1100px){.app{grid-template-columns:76px 1fr}.side{padding:18px 8px;align-items:center}.side .logo{font-size:0;gap:0;padding:0}.nav-btn{padding:11px}.nav-btn .lbl,.nav-btn .lk,.side-foot{display:none}.over-row{grid-template-columns:minmax(0,1fr) auto}.over-row>:nth-child(2){grid-column:1/-1;grid-row:2}}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;z-index:20;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);border-bottom:0;overflow:visible;gap:0}
+  .side .logo{display:none}
+  nav{width:100%;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0}
+  .nav-btn{flex-direction:column;gap:3px;padding:6px 0;font-size:.62rem;align-items:center;min-width:0}
+  .nav-btn .lbl-s{display:block;white-space:nowrap}
+  .logo-m{display:flex;font-size:1.15rem;padding:0;width:100%}
+  .top{gap:10px;padding-block:10px}
+  .top .who .small{display:none}
+  .content{padding-bottom:96px;padding-top:18px;gap:16px}
+  h1{font-size:1.35rem}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px));width:max-content;max-width:calc(100vw - 32px)}
+  .mb-track{height:130px}.mbars{gap:5px}.mb b{font-size:.78rem}.mb-l{padding:2px 6px;font-size:.68rem}
+  .page-head .right{margin-left:0}
+  .as-list{flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:2px}
+  .as-conv{width:auto;flex:none;max-width:200px;border:1px solid var(--line)}
+  .msg{max-width:100%}
+  .card{padding:14px}
+  .card-head{flex-wrap:wrap}
+  .g4{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi .val{font-size:1.12rem}
+  .kpi{gap:8px}
+  .card-head .right{margin-left:0}
+  .card-head h2{flex:1;min-width:60%}
+}
+
+.g-sc{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);align-items:stretch}
+.g-an{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:start}
+.sc-hero{align-items:center;gap:16px;padding:28px 24px}
+.pes{flex-direction:row;align-items:center;text-align:left;width:100%;gap:14px;color:var(--ink)}
+.pes:hover,.rec-row:hover b{border-color:var(--brand);color:var(--brand)}
+.pes .grow{display:flex;flex-direction:column;gap:3px}
+.chv{flex:none;color:var(--muted)}
+.rec-list{display:flex;flex-direction:column}
+.rec-row{display:flex;align-items:center;gap:12px;border:0;border-top:1px solid var(--line);background:none;text-align:left;padding:13px 2px;width:100%;color:var(--ink)}
+.rec-row:first-child{border-top:0}
+.rec-row .grow{display:flex;flex-direction:column;gap:2px}
+.rec-row b{font-weight:600}
+.back{display:inline-flex;align-items:center;gap:4px;font-size:.92rem}
+.back .chv{color:var(--brand)}
+h2.big{font-size:1.35rem;letter-spacing:-.01em}
+.mnav{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:center}
+.mnav button{border:1px solid var(--line);background:var(--surface);border-radius:50%;width:38px;height:38px;display:grid;place-items:center}
+.mnav button:disabled{opacity:.35;cursor:default}
+.mnav h2{font-size:1.2rem}
+.chip.trend{background:none;border:1px solid var(--line);gap:4px}
+@media (max-width:1100px){.g-sc,.g-an{grid-template-columns:1fr}}
+@media (max-width:760px){.pes{flex-wrap:wrap}.rec-row{flex-wrap:wrap}.rec-row .grow{min-width:70%}}
+
+button.logo{border:0;background:none;color:var(--ink);cursor:pointer;text-align:left}
+.hm{display:grid;gap:12px;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-areas:"saldo saldo saldo gastos gastos gastos cart cart cart score score score" "chart chart chart chart chart pend pend pend pend score score score" "alert alert alert venc venc venc tx tx tx score score score"}
+.hm-c{display:flex;flex-direction:column;min-width:0;min-height:0}
+.hm-c>*{flex:1;min-height:0}
+.a-saldo{grid-area:saldo}.a-gastos{grid-area:gastos}.a-cart{grid-area:cart}.a-score{grid-area:score}.a-chart{grid-area:chart}.a-pend{grid-area:pend}.a-alert{grid-area:alert}.a-venc{grid-area:venc}.a-tx{grid-area:tx}
+.hm .lockwrap.is-locked{min-height:0}
+.hc{padding:14px 16px;gap:8px;overflow:hidden}
+.hc-h{display:flex;align-items:center;gap:10px;min-height:22px}
+.hc-h .right{margin-left:auto}
+.hc-t{font-size:.72rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.hc-v{font-family:var(--f-display);font-size:1.5rem;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.mini{display:flex;flex-direction:column;gap:3px;font-size:.84rem;margin-top:2px}
+.mini>div{display:flex;justify-content:space-between;gap:10px}
+.mini b{font-weight:600;white-space:nowrap}
+.mini span.muted{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li0{display:flex;align-items:center;gap:10px}
+.li0 b{font-weight:600}
+.fl{display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:.86rem;width:100%}
+.li.col2{flex-direction:column;align-items:stretch;gap:6px}
+.li b{font-weight:600;white-space:nowrap}
+.li>.grow{display:flex;flex-direction:column;min-width:0}
+.li>.t1.grow{display:block}
+.hm .link{white-space:nowrap}
+.hm .opt{padding:2px 10px;font-size:.78rem}
+.hm .li .small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li0 .grow{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.ico.sm{width:28px;height:28px;font-size:.68rem}
+.hbars{display:flex;gap:12px;flex:1;min-height:110px}
+.hbars>div{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;min-height:0}
+.hb{flex:1;min-height:0;width:100%;display:flex;gap:3px;align-items:flex-end;justify-content:center}
+.hb i{width:36%;max-width:34px;border-radius:4px 4px 0 0;display:block}
+.pf-strip{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 16px;font-size:.85rem;color:var(--ink)}
+.pf-strip:hover{border-color:var(--brand)}
+.pf-strip .prog{width:90px;height:6px}
+.pf-strip .brand-t{font-weight:600}
+.lock-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:0 8px 24px var(--shade);border-radius:999px;padding:9px 16px;font-weight:600;font-size:.84rem;text-align:left}
+.lock-pill svg{width:16px;height:16px;color:var(--brand);flex:none}
+.lock-pill:hover{border-color:var(--brand)}
+.hm .sc{padding:16px;gap:12px}
+.hm .sc-ring{width:132px;height:132px}
+.hm .sc-list{gap:9px}
+@media (min-width:1101px) and (min-height:660px){
+  body.fit .main{height:100vh;overflow:hidden}
+  body.fit .content{flex:1;min-height:0;padding-block:14px 16px;gap:12px}
+  body.fit .hm-head h1{font-size:1.3rem}
+  body.fit .hm{flex:1;min-height:0;grid-template-rows:auto minmax(0,1.2fr) minmax(0,1fr)}
+  body.fit .fl{flex:1;min-height:0;flex-wrap:wrap;overflow:hidden;column-gap:60px;align-content:flex-start}
+  body.fit .hm .li:first-child{border-top:0;padding-top:2px}
+}
+@media (min-width:1101px) and (min-height:660px) and (max-height:820px){
+  body.fit .hm .sc-ring{width:104px;height:104px}
+  body.fit .hm .sc{gap:9px}
+  body.fit .hm .sc-list{gap:6px}
+  body.fit .hm .sc-f{font-size:.8rem;gap:3px 10px}
+  body.fit .top{padding-block:9px}
+  body.fit .demo-bar{padding-block:3px}
+  body.fit .hm-head p{display:none}
+  body.fit .hc{padding:11px 14px;gap:6px}
+  body.fit .hc-v{font-size:1.3rem}
+  body.fit .hm .li{padding:5px 0}
+  body.fit .hm .li.col2{gap:4px}
+  body.fit .hm{gap:10px}
+  body.fit .content{gap:10px;padding-block:10px 12px}
+  body.fit .pf-strip{padding:5px 14px}
+  body.fit .hbars{min-height:60px}
+  body.fit .hm{grid-template-rows:auto minmax(0,1.3fr) minmax(0,1fr)}
+  body.fit .hm .li.col2{gap:3px;padding:4px 0}
+  body.fit .hm .opt{padding:1px 9px}
+  body.fit .hm .li>.grow:not(.t1){flex-direction:row;align-items:baseline;gap:8px}
+  body.fit .hm .li>.grow>.t1{flex:0 1 auto}
+  body.fit .hm .li>.grow>.small{flex:1 1 0;min-width:0}
+  body.fit .hm .ico.sm{display:none}
+  body.fit .mini{gap:1px}
+}
+@media (max-width:1100px){
+  .hm{grid-template-columns:1fr 1fr;grid-template-areas:"saldo gastos" "cart score" "chart score" "pend pend" "alert venc" "tx tx"}
+  .hm .fl>.li:nth-child(n+4){display:none}
+}
+@media (max-width:760px){
+  .hm{grid-template-columns:1fr;grid-template-areas:"saldo" "gastos" "score" "cart" "pend" "venc" "alert" "tx" "chart"}
+  .pf-strip{width:100%;justify-content:space-between}
+  .hbars{min-height:130px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ===== Design 4 (2026-11-15): visual novo sobre a mesma estrutura. O modelo azul está em backup/neo-prototipo-v3-2026-11-15-azul.html ===== */
+h1{font-weight:700;letter-spacing:-.03em}
+h2,h3{letter-spacing:-.015em}
+.app{grid-template-columns:246px 1fr}
+.side{background:#14161A;border:0;margin:14px 0 14px 14px;border-radius:24px;height:calc(100vh - 28px);top:14px;padding:24px 14px}
+:root[data-theme="dark"] .side{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.side .logo{color:#fff}
+.logo{letter-spacing:.04em;font-size:1.4rem}
+.logo i{background:var(--accent);border-radius:8px}
+.logo i::after{border-color:#14161A;border-width:2.5px}
+.side .nav-btn{color:#A9B0AD;border-radius:14px;padding:11px 14px}
+.side .nav-btn:hover{background:rgba(255,255,255,.07);color:#fff}
+.side .nav-btn[aria-current="page"]{background:var(--accent);color:#14161A;font-weight:600}
+.side-foot{color:#8B938F}
+.top{background:transparent;border-bottom:0;padding-bottom:4px}
+.demo-bar{margin:14px 24px 0;border-radius:999px;padding-inline:16px!important}
+.seg{background:var(--surface);border-color:transparent}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);box-shadow:none}
+.btn-ghost{border-color:transparent}
+.avatar{background:var(--btn-bg);color:var(--btn-ink);border:0;width:38px;height:38px}
+.badge-plan.premium{background:var(--btn-bg);color:var(--btn-ink)}
+.card{border-radius:20px;border-color:transparent;box-shadow:0 1px 2px rgba(20,22,26,.04)}
+.btn{border-radius:999px;background:var(--btn-bg);color:var(--btn-ink);padding:10px 18px}
+.btn.sec{border-color:transparent}
+.sc-btn{border-radius:999px}
+.bar-fill,.prog b,.refbar b{background:var(--accent)}
+.bar-fill.neg,.refbar b.over{background:var(--neg)}
+.msg.user{background:var(--btn-bg);color:var(--btn-ink);border-radius:18px 18px 6px 18px}
+.msg.bot .bubble{border-radius:6px 18px 18px 18px;background:var(--surface);border-color:var(--line)}
+.goal,.rec-box,.lock-box,.modal{border-radius:18px}
+.fopt,.debt,.pend-item,.choice,.choice button,.keep button,.wa,.drop{border-radius:14px}
+.composer input,.fin input,.field input,.search{border-radius:999px;padding-inline:16px}
+.as-empty .composer{border-radius:999px}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.keep button[aria-pressed="true"] .box{background:var(--accent);border-color:var(--accent);color:#14161A}
+.step .n{background:var(--accent);color:#14161A}
+.ico{border-radius:12px}
+.lock-pill svg,.lock-box svg{color:var(--brand)}
+.note{border-radius:16px}
+.kpi .val,.hc-v,.over-tot,.compare .big,.score-num b{font-weight:600;letter-spacing:-.03em}
+.hc-t{display:inline-flex;align-items:center;gap:7px;font-weight:700}
+.hc-t::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--brand);flex:none}
+.hc-v{font-size:1.6rem}
+.hc-v .cents{opacity:.4}
+.a-saldo .card{background:linear-gradient(115deg,#BFF5DF 0%,#E4FAF1 55%,#fff 100%)}
+:root[data-theme="dark"] .a-saldo .card{background:linear-gradient(115deg,#12402F 0%,#14261F 55%,#171A1E 100%)}
+.a-saldo .hc-v{font-size:1.9rem}
+.a-saldo .hc-t{color:#3D5A4F}
+:root[data-theme="dark"] .a-saldo .hc-t{color:#8FD9BD}
+.sc{background:radial-gradient(70% 42% at 50% 22%,rgba(26,226,153,.22),transparent 72%),#14161A;border:0;border-radius:20px;color:#fff}
+:root[data-theme="dark"] .sc{background:radial-gradient(70% 42% at 50% 22%,rgba(26,226,153,.2),transparent 72%),var(--surface);box-shadow:inset 0 0 0 1px rgba(26,226,153,.5),0 0 34px rgba(26,226,153,.12)}
+.sc-t,.sc-sub{color:#A3A9B3}
+.sc-t{display:flex;align-items:center;gap:7px;font-weight:700;letter-spacing:.09em}
+.sc-t::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.sc-f{color:#C7CDCA}
+.sc-bar{background:rgba(255,255,255,.14)}
+.sc-btn{background:var(--accent);border:0;color:#14161A}
+.sc-btn:hover{background:var(--accent);filter:brightness(1.06)}
+.sc-ring circle:nth-of-type(2){filter:drop-shadow(0 0 6px currentColor)}
+.sc-hero{border-radius:24px}
+.mb{border-radius:16px}
+.hb i{border-radius:7px 7px 3px 3px}
+.pf-strip{border-color:transparent}
+.toast{border-radius:999px;padding-inline:20px}
+tr.rec td:first-child{border-radius:12px 0 0 12px}tr.rec td:last-child{border-radius:0 12px 12px 0}
+@media (max-width:1100px){.app{grid-template-columns:90px 1fr}.side{padding:20px 8px}.side .nav-btn{padding:12px}}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .side{top:auto;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin:0;height:auto;border-radius:24px;border:0;padding:6px}
+  .side .nav-btn{padding:7px 0;border-radius:16px}
+  .logo-m{color:var(--ink)}
+  .demo-bar{margin:10px 12px 0;border-radius:14px}
+  .content{padding-bottom:110px}
+  .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .side{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}:root:not([data-theme="light"]) .a-saldo .card{background:linear-gradient(115deg,#12402F 0%,#14261F 55%,#171A1E 100%)}:root:not([data-theme="light"]) .a-saldo .hc-t{color:#8FD9BD}:root:not([data-theme="light"]) .sc{background:radial-gradient(70% 42% at 50% 22%,rgba(26,226,153,.2),transparent 72%),var(--surface);box-shadow:inset 0 0 0 1px rgba(26,226,153,.5),0 0 34px rgba(26,226,153,.12)}}
+.sc-hero{--ink:#FFFFFF;--muted:#A3A9B3;--surface-2:rgba(255,255,255,.12);--pos:#1AE299;--warn:#F2B544;--neg:#F47C6C;--good:#7FB2F5;--pos-soft:rgba(26,226,153,.16);--warn-soft:rgba(242,181,68,.16);--neg-soft:rgba(244,124,108,.16);--good-soft:rgba(127,178,245,.16);background:radial-gradient(70% 46% at 50% 26%,rgba(26,226,153,.2),transparent 72%),#14161A;color:#fff;border-color:transparent}
+:root[data-theme="dark"] .sc-hero{background:radial-gradient(70% 46% at 50% 26%,rgba(26,226,153,.18),transparent 72%),#171A1E;box-shadow:inset 0 0 0 1px rgba(26,226,153,.5),0 0 34px rgba(26,226,153,.12)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sc-hero{background:radial-gradient(70% 46% at 50% 26%,rgba(26,226,153,.18),transparent 72%),#171A1E;box-shadow:inset 0 0 0 1px rgba(26,226,153,.5),0 0 34px rgba(26,226,153,.12)}}
+.pf-strip>*{white-space:nowrap}
+
+/* ===== Home nova (2026-11-15): organização da simulação do design 4 ===== */
+.hm.v2{grid-template-areas:"pend pend pend pend pend pend pend pend score score score score" "saldo saldo saldo saldo saldo saldo saldo saldo score score score score" "k1 k1 k2 k2 k3 k3 k4 k4 score score score score" "chart chart chart chart chart chart chart chart score score score score" "alert alert alert alert alert tx tx tx tx cart cart cart"}
+.a-k1{grid-area:k1}.a-k2{grid-area:k2}.a-k3{grid-area:k3}.a-k4{grid-area:k4}
+.hm.v2 .a-saldo .card{padding:18px 22px;gap:28px;flex-direction:row;align-items:center;flex:1}
+.sl-l{display:flex;flex-direction:column;gap:8px;align-items:flex-start;flex:none}
+.hm.v2 .a-saldo .pl-row{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hm.v2 .a-saldo .pl-row .pl{justify-content:space-between;overflow:hidden}
+.kp .hc-t{letter-spacing:.06em}
+.pl-n{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.hm.v2 .sc{display:grid;grid-template-columns:auto minmax(0,1fr);align-content:start;column-gap:16px}
+.hm.v2 .sc>.sc-t,.hm.v2 .sc>.sc-list,.hm.v2 .sc>.sc-btn{grid-column:1/-1}
+.hm.v2 .sc>.sc-ring{width:96px!important;height:96px!important;align-self:center}
+.hm.v2 .sc>.sc-ring+div{align-self:center}
+.hm.v2 .sc .sc-band,.hm.v2 .sc .sc-sub{text-align:left}
+.hm.v2 .sc>.sc-btn{align-self:end}
+.hm.v2 .sc{grid-template-rows:auto auto 1fr auto}
+.hm.v2 .a-saldo .hc-v{font-size:2.4rem;line-height:1.05}
+.pl-row{display:flex;gap:8px;flex-wrap:wrap}
+.pl{display:inline-flex;gap:6px;align-items:center;padding:6px 13px;border-radius:999px;font-size:.82rem;background:var(--surface);box-shadow:0 0 0 1px rgba(20,22,26,.08);white-space:nowrap}
+.pl b{font-weight:600}
+.pl.dark{background:var(--ink);color:var(--bg);font-weight:600;box-shadow:none}
+:root[data-theme="dark"] .pl:not(.dark){background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+.kp{justify-content:space-between}
+.kp .hc-v{font-size:1.3rem;white-space:nowrap}
+.kp .chip{align-self:flex-start}
+.kp-go{border:0;cursor:pointer}
+.kp-go:hover{filter:brightness(.96)}
+.kp .hc-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (min-width:1101px) and (min-height:660px){
+  body.fit .hm.v2{grid-template-rows:auto auto minmax(0,1fr) minmax(0,1.1fr)}
+}
+@media (min-width:1101px) and (min-height:660px) and (max-height:820px){
+  body.fit .hm.v2 .a-saldo .hc-v{font-size:1.9rem}
+  body.fit .hm.v2 .a-saldo .card{padding:12px 18px;gap:7px}
+  body.fit .hm.v2 .pl{padding:4px 11px}
+  body.fit .kp .hc-v{font-size:1.15rem}
+  body.fit .kp{flex-direction:row;align-items:center;flex-wrap:wrap;gap:4px 10px}
+  body.fit .kp .hc-h{width:100%;min-height:0}
+  body.fit .hm.v2 .a-saldo .sl-l{gap:5px}
+  body.fit .hm.v2{grid-template-rows:auto auto minmax(0,1fr) minmax(0,1fr)}
+}
+@media (max-width:1100px){
+  .hm.v2{grid-template-columns:1fr 1fr;grid-template-areas:"saldo saldo" "k1 k2" "k3 k4" "chart score" "pend score" "alert venc" "tx cart"}
+}
+@media (max-width:760px){
+  .hm.v2{grid-template-columns:1fr 1fr;grid-template-areas:"saldo saldo" "k1 k2" "k3 k4" "score score" "cart cart" "pend pend" "venc venc" "alert alert" "tx tx" "chart chart"}
+  .hm.v2 .a-saldo .hc-v{font-size:2rem}
+  .hm.v2 .a-saldo .card{flex-direction:column;align-items:stretch;gap:12px}
+  .hm.v2 .a-saldo .pl-row{grid-template-columns:1fr}
+  .kp .hc-v{font-size:1.05rem}
+}
+
+.tb{position:relative;flex:1;min-height:110px;display:flex;align-items:flex-end;gap:4px;border-bottom:1px dashed var(--line);padding-top:30px}
+.tb i{flex:1;display:block;border-radius:5px 5px 0 0;background:#DDE3E0}
+.tb i.on{background:linear-gradient(180deg,#1AE299,#A9F3D6)}
+:root[data-theme="dark"] .tb i{background:#2A303A}
+:root[data-theme="dark"] .tb i.on{background:linear-gradient(180deg,#1AE299,rgba(26,226,153,.3))}
+.tb-tag{position:absolute;right:0;top:0;background:var(--btn-bg);color:var(--btn-ink);font-size:.75rem;font-weight:600;padding:4px 11px;border-radius:999px;white-space:nowrap}
+.tb-ax{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);flex:none!important}
+.hm.v2 .pl{font-size:.74rem;padding:3px 10px;gap:8px}
+.hm.v2 .pl b{font-weight:500}
+.hm.v2 .a-saldo .pl-row{gap:6px}
+@media (min-width:1101px) and (min-height:660px) and (max-height:820px){body.fit .tb{min-height:60px;padding-top:24px}body.fit .hm.v2 .pl{padding:2px 9px}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tb i{background:#2A303A}:root:not([data-theme="light"]) .tb i.on{background:linear-gradient(180deg,#1AE299,rgba(26,226,153,.3))}}
+
+/* rodada 3 */
+.bk{width:20px;height:20px;border-radius:6px;color:#fff;font-size:.68rem;font-weight:700;display:grid;place-items:center;flex:none}
+.hm.v2 .a-saldo .pl-row{grid-template-columns:repeat(4,minmax(0,1fr))}
+.hm.v2 .pl{justify-content:flex-start!important;gap:8px;padding:4px 10px 4px 5px}
+.pstrip{flex-direction:row!important;align-items:center;gap:16px!important;padding:10px 16px!important}
+.ps-t{display:flex;align-items:center;gap:8px;flex:none;font-size:.88rem}
+.ps-l{display:flex;gap:10px;min-width:0;overflow:hidden;flex:1}
+.ps-i{display:flex;align-items:center;gap:8px;border-left:1px solid var(--line);padding-left:12px;min-width:0;flex:0 1 auto}
+.ps-i .t1{font-size:.84rem;min-width:60px}
+.ps-i .opts{flex-wrap:nowrap}
+.hm.v2 .ps-i .opt{padding:2px 9px;font-size:.76rem}
+.rb{flex:1;min-height:120px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;grid-template-rows:1fr}
+.rb-c{display:grid;grid-template-rows:minmax(0,1fr) auto auto auto;align-items:end;justify-items:center;min-height:0}
+.rb-up{height:100%;width:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;border-bottom:1px solid var(--line);min-height:0}
+.rb-dn{display:flex;flex-direction:column;align-items:center;width:100%}
+.rb i{display:block;width:min(56%,46px);border-radius:8px 8px 3px 3px;background:#C6F3E1}
+.rb i.neg{background:var(--neg-soft);border-radius:3px 3px 8px 8px}
+.rb-c.on i.pos{background:linear-gradient(180deg,#1AE299,#7DEDC4)}
+:root[data-theme="dark"] .rb i{background:#1E4D3C}:root[data-theme="dark"] .rb-c.on i.pos{background:linear-gradient(180deg,#1AE299,rgba(26,226,153,.45))}
+.rb-v{font-size:.78rem;font-weight:600;white-space:nowrap}
+.rb-c.on .rb-v{background:var(--btn-bg);color:var(--btn-ink);padding:2px 9px;border-radius:999px}
+.rb-m{font-size:.8rem;font-weight:600;margin-top:6px}
+.rb-s{font-size:.7rem;color:var(--muted);white-space:nowrap}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .rb i{background:#1E4D3C}:root:not([data-theme="light"]) .rb-c.on i.pos{background:linear-gradient(180deg,#1AE299,rgba(26,226,153,.45))}}
+@media (min-width:1101px) and (min-height:660px){body.fit .hm.v2{grid-template-rows:auto auto auto minmax(0,1.35fr) minmax(0,1fr)}}
+@media (min-width:1101px) and (min-height:660px) and (max-height:820px){body.fit .hm.v2{grid-template-rows:auto auto auto minmax(0,1.2fr) minmax(0,1fr)}body.fit .rb{min-height:70px}body.fit .rb-s{display:none}body.fit .pstrip{padding:7px 14px!important}}
+@media (max-width:1100px){.hm.v2{grid-template-columns:1fr 1fr;grid-template-areas:"pend pend" "saldo saldo" "k1 k2" "k3 k4" "chart chart" "score alert" "tx cart"}.ps-l{flex-wrap:wrap}}
+@media (max-width:760px){
+  .hm.v2{grid-template-columns:1fr 1fr;grid-template-areas:"pend pend" "saldo saldo" "k1 k2" "k3 k4" "score score" "chart chart" "alert alert" "cart cart" "tx tx"}
+  .hm.v2 .a-saldo .pl-row{grid-template-columns:1fr 1fr}
+  .pstrip{flex-direction:column!important;align-items:stretch}
+  .ps-l{flex-direction:column;gap:8px}.ps-i{border-left:0;padding-left:0;flex-wrap:wrap}
+  .rb{gap:6px}.rb-s{white-space:normal;text-align:center}
+  .rb-v{font-size:.68rem}
+}
+
+.sl-v{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hm.v2 .a-saldo .hc-v{font-size:2.1rem}
+.hm.v2 .a-saldo .card{padding:14px 20px}
+.hm.v2 .a-saldo .pl-row{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.hm.v2 .a-saldo .pl-row .pl{flex:none}
+.ps-l{overflow:visible;flex:1 1 auto}
+.ps-i{flex:none}
+.ps-b{margin-left:auto;flex:none;padding:6px 14px;font-size:.8rem}
+.kp-r{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.hm.v2 .kp{padding:12px 16px;gap:6px}
+@media (min-width:1101px) and (min-height:660px){body.fit .hm.v2{grid-template-rows:auto auto auto minmax(0,1fr) minmax(0,1fr)}}
+@media (min-width:1101px) and (max-width:1380px){.ps-i:nth-child(2){display:none}}
+@media (max-width:760px){.hm.v2 .a-saldo .pl-row{justify-content:flex-start}.ps-b{margin-left:0}.ps-i:nth-child(2){display:flex}}
+
+.hm.v2 .a-saldo .pl-row{display:grid;grid-template-columns:auto auto;justify-content:end}
+.ps-l{overflow:hidden}
+@media (min-width:761px){.ps-i:nth-child(n+2){display:none}}
+@media (min-width:1101px) and (min-height:660px){body.fit .hm.v2{grid-template-rows:auto auto auto minmax(0,1fr) minmax(0,1.12fr)}}
+.hm.v2 .a-alert .li{padding:6px 0}
+@media (max-width:760px){.pmrow .grow{flex:1 1 100%;min-width:0}.pmrow .grow .t{white-space:normal}.pmrow .opts{justify-content:flex-start}.hm.v2 .a-saldo .pl-row{justify-content:flex-start;justify-self:start;margin-left:0}}
+@media (max-width:760px){.hm.v2 .a-alert .fl>.li:nth-child(n+4){display:flex}.hm.v2 .rb-s{display:none}.hm.v2 .a-chart p .muted{white-space:normal}.hm.v2 .a-chart p{white-space:normal;overflow:visible;text-overflow:clip}}
+/* ===== Celular (2026-11-16): mais perto da simulação do design 4 ===== */
+@media (max-width:760px){
+  .demo-bar{font-size:.74rem;padding:8px 12px;gap:8px}
+  .top{display:grid!important;grid-template-columns:1fr auto;grid-template-areas:"logo who" "seg theme";align-items:center;row-gap:10px;column-gap:8px;padding-block:12px 4px}
+  .top>.logo-m{grid-area:logo;width:auto}
+  .top>.ctl:nth-child(2){grid-area:seg}
+  .top>.ctl:nth-child(3){grid-area:theme}
+  .top>.ctl:nth-child(4){display:none}
+  .top>.who{grid-area:who;margin:0}
+  .top .seg-label,#planBadge{display:none}
+  .top .seg button,#themeBtn{padding:7px 14px;font-size:.82rem}
+  .hm-head h1{font-size:1.6rem;letter-spacing:-.02em}
+  .hm-head p{font-size:.85rem}
+  .hm.v2{grid-template-areas:"saldo saldo" "k1 k2" "k3 k4" "score score" "alert alert" "pend pend" "tx tx" "chart chart" "cart cart"!important;gap:12px}
+  .hm.v2 .a-saldo .hc-v{font-size:2.3rem;letter-spacing:-.02em}
+  .hm.v2 .a-saldo .pl-row{grid-template-columns:1fr 1fr!important}
+  .kp .hc-v{font-size:1.15rem}
+  .hm.v2 .kp .hc-t{white-space:normal;overflow:visible;text-overflow:clip;letter-spacing:.06em}
+  .hm.v2 .a-score .sc{display:grid;grid-template-columns:96px 1fr 18px;grid-template-areas:"ring t arr" "ring band arr";align-items:center;column-gap:16px;row-gap:4px;padding:16px 18px;cursor:pointer;min-height:0}
+  .hm.v2 .a-score .sc-t{grid-area:t;align-self:end;margin:0}
+  .hm.v2 .a-score .sc-ring{grid-area:ring;width:96px;height:96px;margin:0}
+  .hm.v2 .a-score .sc>div:not([class]){grid-area:band;align-self:start}
+  .hm.v2 .a-score .sc-band{font-size:1.15rem}
+  .hm.v2 .a-score .sc-list,.hm.v2 .a-score .sc-btn{display:none}
+  .hm.v2 .a-score .sc::after{content:"›";grid-area:arr;font-size:1.6rem;color:rgba(255,255,255,.6)}
+}
+/* ===== Olho, deslizar e cadeados na barra (2026-11-16) ===== */
+.eye-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--ink);cursor:pointer;padding:0}
+.eye-btn svg{width:19px;height:19px}
+.eye-btn[aria-pressed="true"]{background:var(--btn-bg);color:var(--btn-ink);border-color:transparent}
+body.hide-vals .cents{display:none}
+@keyframes swl{from{opacity:.3;transform:translateX(36px)}to{opacity:1;transform:none}}
+@keyframes swr{from{opacity:.3;transform:translateX(-36px)}to{opacity:1;transform:none}}
+#view.sw-l{animation:swl .22s ease-out}#view.sw-r{animation:swr .22s ease-out}
+@media (prefers-reduced-motion:reduce){#view.sw-l,#view.sw-r{animation:none}}
+@media (max-width:1100px){.nav-btn{position:relative}.nav-btn .lk{display:block!important;position:absolute;top:2px;right:calc(50% - 17px);width:15px;height:15px;margin:0;padding:2.5px;box-sizing:border-box;border-radius:50%;background:var(--surface-2);opacity:1}.nav-btn .lk svg{width:100%!important;height:100%!important;display:block;margin:0}}
+@media (max-width:760px){.side .nav-btn .lk{background:#3A3F45;color:#F2F4F5;top:3px}.side .nav-btn[aria-current="page"] .lk{background:#0B0D0F;color:#1AE299}
+  .hm.v2{grid-template-areas:"saldo saldo" "chart chart" "score score" "alert alert" "pend pend" "tx tx" "k1 k2" "k3 k4" "cart cart"!important}
+  .top>.who{display:flex;gap:8px;align-items:center}.eye-btn{width:36px;height:36px}}
+</style>
+
+<div class="app">
+  <aside class="side">
+    <button class="logo" type="button" data-go="home" aria-label="NEO, ir para a Home"><i aria-hidden="true"></i>NEO</button>
+    <nav id="nav" aria-label="Abas"></nav>
+    <div class="side-foot">
+      <span>Contas conectadas pelo Open Finance</span>
+      <span>Última sincronização: 06/11/2026, 08:12</span>
+    </div>
+  </aside>
+  <div class="main">
+    <div class="demo-bar"><span>Protótipo para demonstração. Pessoas, valores, taxas e instituições são fictícios. Nada aqui usa dados seus.</span><button class="op-btn" type="button" data-act="opiniao">Dar opinião</button></div>
+    <header class="top">
+      <button class="logo logo-m" type="button" data-go="home" aria-label="NEO, ir para a Home"><i aria-hidden="true"></i>NEO</button>
+      <div class="ctl"><span class="seg-label">Ver como</span>
+        <div class="seg" role="group" aria-label="Plano do usuário">
+          <button id="pl-free" type="button">Gratuito</button>
+          <button id="pl-prem" type="button">Premium</button>
+        </div>
+      </div>
+      <div class="ctl"><button id="themeBtn" class="btn-ghost" type="button">Tema escuro</button></div>
+      <div class="ctl"><button id="topCta" class="btn" type="button" data-act="assinar">Assinar o Premium</button></div>
+      <div class="who"><button id="eyeBtn" class="eye-btn" type="button" aria-pressed="false" aria-label="Ocultar valores" title="Ocultar valores"></button><span id="planBadge" class="badge-plan">Gratuito</span><span class="small muted">João e Marina</span><span class="avatar">JM</span></div>
+    </header>
+    <main class="content" id="view"></main>
+  </div>
+</div>
+<div id="modal" class="modal-bg" hidden><div class="modal" role="dialog" aria-modal="true" aria-label="Detalhes"></div></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(function(){
+const R = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const R0 = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const P = (v,d=1) => v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const store = {get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+const ICON = {
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg>',
+  plan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M5 16l4-5 4 3 6-8"/><path d="M15 6h4v4"/></svg>',
+  credit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>',
+  market:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
+  gastos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4a8.5 8.5 0 1 0 8.5 9H11z"/><path d="M14.5 3.5a7 7 0 0 1 6 6h-6z"/></svg>',
+  score:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-6"/><path d="M4 20.5h16"/></svg>',
+  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A9.7 9.7 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'
+};
+const TABS = [
+  {id:'home',label:'Home',sh:'Home',icon:'home',premium:false},
+  {id:'gastos',label:'Gastos',sh:'Gastos',icon:'gastos',premium:true},
+  {id:'score',label:'Score',sh:'Score',icon:'score',premium:true},
+  {id:'assistente',label:'Assistente financeiro',sh:'Assistente',icon:'chat',premium:true},
+  {id:'plano',label:'Plano financeiro',sh:'Plano',icon:'plan',premium:true},
+  {id:'credito',label:'Crédito',sh:'Crédito',icon:'credit',premium:false},
+  {id:'marketplace',label:'Marketplace',sh:'Market',icon:'market',premium:false}
+];
+
+/* ---------- dados fictícios ---------- */
+const contas = [
+  {inst:'Banco Alfa',tipo:'Conta corrente · João',fim:'4821',saldo:4318.52,sig:'BA'},
+  {inst:'Banco Beta',tipo:'Conta corrente · Marina',fim:'0937',saldo:2904.17,sig:'BB'},
+  {inst:'Banco Alfa',tipo:'Poupança',fim:'4821',saldo:6250.00,sig:'BA'},
+  {inst:'Corretora Gama',tipo:'Investimentos',fim:'1180',saldo:18940.33,sig:'CG'}
+];
+const cartoes = [
+  {nome:'Banco Alfa Platinum',fim:'7712',limite:9000,usado:6842.30,venc:'15/11',media:5560},
+  {nome:'Banco Beta Gold',fim:'3390',limite:4000,usado:1215.90,venc:'22/11',media:1290}
+];
+const CATS = ['Mercado','Lazer','Saúde','Transporte','Moradia','Educação','Outros'];
+const trans = [
+  {id:1,d:'06/11',desc:'Supermercado Bom Preço',conta:'Cartão Alfa',v:-145.98,cat:null,sug:['Mercado','Lazer','Outros']},
+  {id:2,d:'05/11',desc:'Salário · João',conta:'Banco Alfa',v:9200.00,cat:'Renda'},
+  {id:3,d:'05/11',desc:'Posto Avenida',conta:'Cartão Alfa',v:-220.00,cat:'Transporte'},
+  {id:4,d:'05/11',desc:'Farmácia Central',conta:'Cartão Beta',v:-64.90,cat:null,sug:['Saúde','Mercado','Outros']},
+  {id:5,d:'05/11',desc:'Aluguel',conta:'Banco Alfa',v:-2470.00,cat:'Moradia'},
+  {id:6,d:'04/11',desc:'Escola Pequeno Mundo',conta:'Banco Beta',v:-1380.00,cat:'Educação'},
+  {id:7,d:'03/11',desc:'Restaurante Sabor da Casa',conta:'Cartão Alfa',v:-187.40,cat:null,sug:['Lazer','Mercado','Outros']},
+  {id:8,d:'03/11',desc:'Streaming Plus',conta:'Cartão Alfa',v:-55.90,cat:'Assinaturas'},
+  {id:9,d:'02/11',desc:'Tarifa pacote de serviços',conta:'Banco Alfa',v:-42.90,cat:'Tarifas'},
+  {id:10,d:'01/11',desc:'Parcela financiamento do carro',conta:'Banco Alfa',v:-1486.27,cat:'Dívidas'}
+];
+const catsOut = [
+  ['Moradia',3450.00,3420.00],['Dívidas e juros',2318.67,1706.27],['Mercado',2140.35,1640.00],['Educação',1380.00,1380.00],
+  ['Transporte',1236.80,880.00],['Lazer',1180.40,420.00],['Saúde',742.10,240.00],
+  ['Assinaturas',289.70,281.50],['Outros',210.63,107.33],['Tarifas',87.80,42.90]
+];
+const meses = [['Mai',14800,13920],['Jun',14800,14110],['Jul',15300,14690],['Ago',14800,14522],['Set',14800,14318],['Out',14800,14236.45]];
+
+/* ---------- estado ---------- */
+const S = {
+  premium: store.get('neo-plan')==='premium',
+  tab: 'home',
+  mkt: null, gTab: 'geral', modal: null, chat: [],
+  debt: 'veiculo',
+  casamento: null,
+  aposentadoria: null,
+  chatExtra: [],
+  f: {}, car: null, goals: [], ngOpen: false,
+  perfilSeguro: null
+};
+
+/* ---------- utilidades ---------- */
+function lock(inner, title, text){
+  if(S.premium) return `<div class="lockwrap">${inner}</div>`;
+  return `<div class="lockwrap is-locked"><div class="lock-content" aria-hidden="true">${inner}</div>
+    <div class="lock-over"><div class="lock-box"><div class="lk-t">${ICON.lock}<span>${title}</span></div><p>${text}</p>
+    <button class="btn" type="button" data-act="assinar">Assinar o Premium</button></div></div></div>`;
+}
+/* Opinião dos testadores (Etapa 0). As respostas abrem no WhatsApp, já escritas; a pessoa só confirma o envio. Envio automático, sem abrir nada, depende do servidor da versão de teste real. */
+const OPINIAO_WHATSAPP='5554992069572';
+const OP_PERG=[
+  ['entendeu','Em poucas palavras, o que a NEO faz?','text'],
+  ['primeiro','Qual parte você usaria primeiro?','sel',['Home','Gastos','Score','Assistente','Plano','Crédito','Marketplace','Nenhuma']],
+  ['confuso','O que ficou confuso?','text'],
+  ['falta','O que você sentiu falta?','text'],
+  ['nota','De 0 a 10, quanto você recomendaria a NEO a um amigo?','sel',['10','9','8','7','6','5','4','3','2','1','0']],
+  ['premium','Você pagaria pelo Premium?','sel',['Sim','Talvez','Não']],
+  ['valor','Se sim ou talvez, quanto por mês seria justo?','line'],
+  ['mais','Quer contar mais alguma coisa?','text']];
+const TAB_NOMES={home:'Home',gastos:'Gastos',score:'Score',assistente:'Assistente',plano:'Plano',credito:'Crédito',marketplace:'Marketplace'};
+function opiniaoHtml(){
+  const campo=([id,t,k,o])=>`<label class="field">${t}${k==='sel'?`<select id="op-${id}"><option value="">Escolha</option>${o.map(x=>`<option>${x}</option>`).join('')}</select>`:k==='line'?`<input id="op-${id}" type="text" maxlength="60">`:`<textarea id="op-${id}" rows="2" maxlength="400"></textarea>`}</label>`;
+  return `<div class="card-head"><h2 style="font-size:1.25rem">Sua opinião sobre a NEO</h2><button class="link right" type="button" data-act="modal-close">Fechar</button></div>
+  <p class="muted small">Leva uns 2 minutos. Responda só o que quiser e não coloque dados pessoais ou financeiros aqui.</p>
+  <form id="opForm" class="col" style="gap:12px">${OP_PERG.map(campo).join('')}
+  <div class="btn-row"><button class="btn" type="submit" data-via="wa">Enviar pelo WhatsApp</button><button class="link" type="submit" data-via="copiar">Copiar respostas</button></div>
+  <p class="muted small">O WhatsApp abre com as respostas já escritas. É só tocar em enviar.</p></form>`}
+function enviarOpiniao(fm,via){
+  const linhas=OP_PERG.map(([id,t])=>{const v=(fm.querySelector('#op-'+id).value||'').trim();return v?`${t}\n${v}`:''}).filter(Boolean);
+  if(!linhas.length){toast('Responda pelo menos uma pergunta.');return}
+  const txt=`Opinião sobre o protótipo da NEO (tela: ${TAB_NOMES[S.tab]||S.tab}, visão ${S.premium?'Premium':'Gratuita'})\n\n`+linhas.join('\n\n');
+  if(via==='wa'){window.open('https://wa.me/'+OPINIAO_WHATSAPP+'?text='+encodeURIComponent(txt),'_blank','noopener');closeModal();toast('Obrigado! Confira e envie a mensagem no WhatsApp.');return}
+  const ok=()=>{closeModal();toast('Respostas copiadas. Cole numa mensagem para quem te enviou o link.')};
+  if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(txt).then(ok,()=>mostrarTexto(txt)); else mostrarTexto(txt);
+}
+function mostrarTexto(txt){const m=document.querySelector('#modal .modal');m.innerHTML=`<div class="card-head"><h2 style="font-size:1.25rem">Copie suas respostas</h2><button class="link right" type="button" data-act="modal-close">Fechar</button></div><p class="muted small">Selecione o texto abaixo, copie e mande para quem te enviou o link.</p><label class="field">Respostas<textarea rows="10" readonly></textarea></label>`;const ta=m.querySelector('textarea');ta.value=txt;ta.focus();ta.select()}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2800)}
+
+function lineChart(series, labels, o={}){
+  const W=o.w||640,H=o.h||210,pl=o.pl||70,pr=16,pt=14,pb=28;
+  const all=series.flatMap(s=>s.data);
+  let mn=Math.min(0,...all), mx=Math.max(...all);
+  if(o.min!==undefined) mn=o.min;
+  const pad=(mx-mn)*0.08; if(o.max!==undefined) mx=o.max; else mx+=pad; if(mn<0) mn-=pad;
+  const X=i=>pl+i*(W-pl-pr)/(labels.length-1), Y=v=>pt+(mx-v)*(H-pt-pb)/(mx-mn);
+  const ticks=4, step=(mx-mn)/ticks;
+  let g='';
+  for(let i=0;i<=ticks;i++){const v=mn+i*step;g+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${pl-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${o.fmt?o.fmt(v):R0(v)}</text>`}
+  if(mn<0) g+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--neg)" stroke-width="1" stroke-dasharray="4 4"/>`;
+  const every=o.every||1;
+  labels.forEach((l,i)=>{if(i%every===0||i===labels.length-1) g+=`<text x="${X(i)}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--muted)">${l}</text>`});
+  series.forEach(s=>{
+    const d=s.data.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
+    if(s.area){g+=`<path d="${d} L${X(s.data.length-1)} ${Y(Math.max(mn,0))} L${X(0)} ${Y(Math.max(mn,0))}Z" fill="${s.color}" fill-opacity=".10"/>`}
+    g+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.2" ${s.dash?'stroke-dasharray="6 5"':''}/>`;
+    const li=s.data.length-1; g+=`<circle cx="${X(li)}" cy="${Y(s.data[li])}" r="3.5" fill="${s.color}"/>`;
+  });
+  if(o.mark){const i=o.mark.i,v=series[0].data[i];g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="5" fill="var(--neg)"/><text x="${X(i)+8}" y="${Y(v)+16}" font-size="11.5" font-weight="600" fill="var(--neg)">${o.mark.label}</text>`}
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${o.aria||'Gráfico'}">${g}</svg>`;
+}
+
+/* ---------- cálculos ---------- */
+// saldo previsto nos próximos 30 dias (06/11 a 05/12)
+function projecao(){
+  const ev={'10/11':[-980,'Condomínio'],'15/11':[-6842.30,'Fatura Alfa'],'18/11':[-286,'Energia (estimada)'],'20/11':[5600-119.90,'Salário Marina e internet'],'22/11':[-1215.90,'Fatura Beta'],'25/11':[-1200,'Aporte previdência'],'01/12':[-1486.27,'Parcela do carro'],'05/12':[9200,'Salário João']};
+  let s=contas[0].saldo+contas[1].saldo; const lab=[],dat=[];
+  const d0=new Date(Date.UTC(2026,10,6));
+  for(let i=0;i<=29;i++){const d=new Date(d0.getTime()+i*864e5);const k=String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0');
+    if(i>0) s-=75; if(ev[k]) s+=ev[k][0]; lab.push(k); dat.push(Math.round(s*100)/100);}
+  let mi=0; dat.forEach((v,i)=>{if(v<dat[mi]) mi=i});
+  return {lab,dat,mi};
+}
+// aposentadoria
+const AP = {idade:34, alvo:60, renda:6000, real:0.04, prev:42000, aporte:1200};
+function apos(aporte, idadeAlvo){
+  const n=(idadeAlvo-AP.idade)*12, rm=Math.pow(1+AP.real,1/12)-1;
+  const fvCur=AP.prev*Math.pow(1+rm,n), fac=(Math.pow(1+rm,n)-1)/rm;
+  const need=AP.renda*12/AP.real, proj=fvCur+aporte*fac;
+  return {need, proj, renda:proj*AP.real/12, aporteNec:(need-fvCur)/fac};
+}
+function idadeQueAtinge(aporte){for(let a=AP.alvo;a<=85;a++){if(apos(aporte,a).proj>=AP.renda*12/AP.real) return a}return null}
+function serieApos(aporte){const rm=Math.pow(1+AP.real,1/12)-1, out=[];for(let y=0;y<=AP.alvo-AP.idade;y++){const n=y*12;out.push(AP.prev*Math.pow(1+rm,n)+aporte*(Math.pow(1+rm,n)-1)/rm)}return out}
+// financiamento
+function pmt(pv,i,n){return pv*i/(1-Math.pow(1+i,-n))}
+function saldoDev(parc,i,n){return parc*(1-Math.pow(1+i,-n))/i}
+
+/* ---------- dados de gastos e score (fictícios) ---------- */
+const REF={'Moradia':30,'Mercado':12,'Dívidas e juros':15,'Educação':10,'Transporte':10,'Lazer':6,'Saúde':6,'Assinaturas':2,'Outros':3,'Tarifas':0.5};
+const APORTE={atual:1200,ant:4200,ref:10};
+const subs=[['Academia Corpo Ativo','Cartão Alfa','dia 05',129.00,''],['Streaming Plus','Cartão Alfa','dia 03',55.90,''],['App de idiomas','Cartão Beta','dia 12',38.10,'Subiu de R$ 29,90 para R$ 38,10 em outubro'],['Jornal Digital','Cartão Alfa','dia 18',29.90,''],['Música Sem Limite','Cartão Alfa','dia 09',21.90,''],['Nuvem 200 GB','Cartão Beta','dia 21',14.90,'']];
+const parcelas=[['Notebook','Cartão Alfa',349.90,6,10],['Geladeira','Cartão Alfa',291.58,3,12],['Sofá','Cartão Beta',412.00,5,6]];
+const SCORE={v:580,prev:527,
+  hist:[['Jun',512],['Jul',520],['Ago',535],['Set',531],['Out',527],['Nov',580]],
+  bands:[[0,399,'Crítico','neg'],[400,599,'Atenção','warn'],[600,799,'Bom','good'],[800,1000,'Excelente','pos']],
+  comps:[
+    ['Renda comprometida com dívidas','16% da renda',150,200,'warn','Quanto da renda vai para parcelas e juros. Abaixo de 15% vale a pontuação máxima.'],
+    ['Regularidade dos aportes','4 dos últimos 6 meses',110,150,'warn','Em quantos meses a família guardou dinheiro como combinado.'],
+    ['Reserva de emergência','0,4 mês de despesas',60,200,'neg','Quantos meses de despesas a reserva cobre. A referência é de 3 a 6 meses.'],
+    ['Rotativo e cheque especial','Usados em 2 dos últimos 3 meses',80,200,'neg','Uso dos créditos mais caros do mercado nos últimos 3 meses.'],
+    ['Resultado do mês','Sobraram R$ 563,55 em outubro',120,150,'pos','Se as entradas cobrem as saídas, e com que folga.'],
+    ['Proteção da família','Seguro de vida não informado',60,100,'warn','Seguro de vida e previdência, quando o perfil traz a informação.']
+  ],
+  acoes:[
+    ['Sair do rotativo do cartão Alfa','Trocar a dívida por um crédito mais barato',80,'credito','Analisar na aba Crédito'],
+    ['Retomar o aporte do casamento','Outubro ficou sem aporte',25,'plano','Ajustar no Plano'],
+    ['Informar ou contratar um seguro de vida','O perfil ainda não tem essa informação',40,'home','Completar o perfil'],
+    ['Montar a reserva de emergência','Começa em julho de 2027, depois do casamento',140,'plano','Ver no Plano']
+  ]};
+const SC_HIST=[[120,115,55,120,42,60],[120,120,55,120,45,60],[120,125,60,120,50,60],[130,125,60,80,76,60],[130,110,60,80,87,60],[150,110,60,80,120,60]];
+const SC_MES={Jun:'junho',Jul:'julho',Ago:'agosto',Set:'setembro',Out:'outubro',Nov:'novembro'};
+const SC_TIP=['Parcelas e juros abaixo de 15% da renda valem a pontuação máxima. Trocar uma dívida cara por uma mais barata é o caminho mais rápido.','Guardar todo mês, mesmo um valor menor, pesa mais do que guardar muito de vez em quando.','A referência é ter de 3 a 6 meses de despesas guardados. Cada mês de despesa coberto soma pontos.','Três meses seguidos sem rotativo e sem cheque especial devolvem a pontuação máxima.','Fechar o mês no positivo, com folga de pelo menos 5% da renda, vale a pontuação máxima.','Informar os seguros no perfil já soma pontos. Ter seguro de vida com filho pequeno soma mais.'];
+const fxBand=r=>r>=.8?['Ótimo','pos']:r>=.6?['Bom','good']:r>=.4?['Pode melhorar','warn']:['Crítico','neg'];
+const CHEV='<svg class="chev" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const SC_DICAS=[
+  ['Dívidas e crédito',[
+    ['Sair do rotativo e do cheque especial','','São os créditos mais caros do mercado. Usar em um mês já derruba o fator "Uso de crédito caro" por três meses. Se a fatura não couber, vale trocar o saldo por um crédito com parcela fixa e juros menores.','credito','Ver opções na aba Crédito'],
+    ['Cuidado ao fazer compras em muitas parcelas','3 em andamento','Cada parcela compromete a renda dos próximos meses. Hoje são R$ 1.053,48 por mês em compras parceladas, que entram na conta da renda comprometida.','gastos','Ver parcelamentos'],
+    ['Rever juros dos créditos que já existem','','Portabilidade e renegociação reduzem a parcela sem aumentar a dívida. Parcela menor significa menos renda comprometida.','credito','Analisar meus contratos']]],
+  ['Conta e renda',[
+    ['Manter as contas conectadas pelo Open Finance','Ok','Com todas as contas e cartões conectados, o score enxerga a vida financeira inteira. Uma conta de fora pode esconder uma reserva ou uma dívida.',null,null],
+    ['Manter a renda atualizada','Atualizada em 05/11/2026','Todos os fatores são medidos em relação à renda da família. Mudou de emprego ou ganhou uma renda extra? Atualize no perfil.','home','Ver o perfil da família'],
+    ['Completar o perfil da família','6 de 10','Seguro de vida, seguro do carro, plano de saúde e previdência da empresa ainda não foram informados. Eles entram no fator "Proteção da família".','home','Completar o perfil']]],
+  ['Futuro',[
+    ['Guardar dinheiro todo mês','','Vale mais a regularidade do que o valor. Aporte automático no dia do salário é a forma mais simples de não falhar.','plano','Ver os aportes no Plano'],
+    ['Montar a reserva de emergência','0,4 mês','A reserva evita que um imprevisto vire rotativo. No plano de vocês, ela começa a receber aportes em julho de 2027.','plano','Ver no Plano'],
+    ['Ter objetivos com valor e prazo','','Objetivo com valor e data vira aporte mensal, e aporte em dia sobe o score. O assistente ajuda a montar.','assistente','Contar um objetivo ao assistente']]]
+];
+const CHEV_R='<svg class="chv" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CHEV_L='<svg class="chv" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M10 4L6 8l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ARW=d=>`<svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><path d="${d>0?'M5 8.5V1.5M2 4.5l3-3 3 3':'M5 1.5v7M2 5.5l3 3 3-3'}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const FX_GO=[['credito','Ver na aba Crédito'],['plano','Ver os aportes no Plano'],['plano','Ver a reserva no Plano'],['credito','Ver opções para sair do rotativo'],['gastos','Ver os gastos do mês'],['home','Completar o perfil']];
+const FX_GROUPS=[['Sua saúde financeira',[4,1,2]],['Dívidas e crédito',[0,3]],['Proteção',[5]]];
+function scRing(v,size){
+  const b=SCORE.bands.find(x=>v>=x[0]&&v<=x[1]), cx=110, cy=108, r=92, a0=135, span=270, gap=5;
+  const pt=a=>{const t=a*Math.PI/180;return [cx+r*Math.cos(t),cy+r*Math.sin(t)]};
+  const arc=(s,e)=>{const p1=pt(s),p2=pt(e);return `M${p1[0].toFixed(1)} ${p1[1].toFixed(1)} A${r} ${r} 0 ${e-s>180?1:0} 1 ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`};
+  let g='';
+  SCORE.bands.forEach(bd=>{const st=a0+bd[0]/1000*span+gap/2, en=a0+(bd[1]+1)/1000*span-gap/2;
+    g+=`<path d="${arc(st,en)}" fill="none" stroke="var(--surface-2)" stroke-width="16"/>`;
+    const ee=Math.min(en,a0+v/1000*span); if(ee>st+1) g+=`<path d="${arc(st,ee)}" fill="none" stroke="var(--${b[3]})" stroke-width="16"/>`});
+  const d=v-SCORE.prev;
+  return `<svg viewBox="0 0 220 196" width="${size}" style="max-width:100%" role="img" aria-label="Score ${v} de 1000, faixa ${b[2]}">${g}<text x="110" y="74" text-anchor="middle" font-size="13" font-weight="600" fill="var(--${d>=0?'pos':'neg'})">${d>=0?'+':''}${d} em 30 dias</text><text x="110" y="124" text-anchor="middle" font-size="54" font-weight="800" fill="var(--ink)" style="font-family:var(--f-display)">${v}</text><text x="110" y="148" text-anchor="middle" font-size="13" fill="var(--muted)">de 1000</text></svg>`;
+}
+const bandOf=v=>SCORE.bands.find(b=>v>=b[0]&&v<=b[1]);
+
+function pendCard(){
+  const pend=trans.filter(t=>t.cat===null);
+  return `<div class="card"><div class="card-head"><h2>Gastos aguardando categoria</h2><span class="chip brand right">${pend.length}</span></div>
+    ${pend.length?`<div class="pend">${pend.map(t=>`<div class="pend-item"><div style="display:flex;gap:8px"><span class="grow"><b>${R(-t.v)}</b> · ${t.desc}</span><span class="small muted">${t.d}</span></div><div class="opts">${t.sug.map(c=>`<button class="opt" type="button" data-cat="${t.id}|${c}">${c}</button>`).join('')}</div></div>`).join('')}</div>
+    <p class="small muted">A mesma pergunta foi enviada no WhatsApp. Vale a primeira resposta, em qualquer canal.</p>`:`<p class="muted">Tudo categorizado. As próximas perguntas chegam aqui e no WhatsApp.</p>`}</div>`;
+}
+function txTable(rows,withCat){
+  return `<div class="tbl-box"><table><thead><tr><th>Data</th><th>Descrição</th><th>Conta</th>${withCat?'<th>Categoria</th>':''}<th class="num">Valor</th></tr></thead><tbody>${rows.map(t=>`<tr data-text="${(t.desc+' '+t.conta+' '+(t.cat||'')).toLowerCase()}"><td>${t.d}</td><td>${t.desc}</td><td class="muted">${t.conta}</td>${withCat?`<td>${t.cat?`<span class="chip">${t.cat}</span>`:`<span class="chip warn">Aguardando categoria</span>`}</td>`:''}<td class="num ${t.v>0?'pos':''}">${t.v>0?'+':''}${R(t.v)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+/* ---------- HOME ---------- */
+const VENC=[['10/11','Condomínio',980],['15/11','Fatura cartão Alfa',6842.30],['18/11','Energia (estimada, entre R$ 250 e R$ 320)',286],['20/11','Internet',119.90],['22/11','Fatura cartão Beta',1215.90],['01/12','Parcela financiamento do carro',1486.27]];
+function vencCard(n){
+  const rows=n?VENC.slice(0,n):VENC;
+  return `<div class="card"><div class="card-head"><h2>Contas a vencer</h2>${n?`<button class="link right" data-go="gastos" data-gtab="geral">Ver todas (${VENC.length})</button>`:''}</div><div class="rows">${rows.map(v=>`<div class="row"><span class="ico">${v[0].slice(0,2)}</span><div class="grow"><div class="t">${v[1]}</div><div class="s">${v[0]}</div></div><span class="amt">${R(v[2])}</span></div>`).join('')}</div></div>`;
+}
+function projCard(){
+  const pr=projecao();
+  return `<div class="card"><div class="card-head"><h2>Saldo previsto nos próximos 30 dias</h2><span class="chip neg right">Fica negativo em ${pr.lab[pr.dat.findIndex(v=>v<0)]}</span></div>
+    ${lineChart([{data:pr.dat,color:'var(--brand)',area:true}],pr.lab,{every:5,pl:78,mark:{i:pr.mi,label:R0(pr.dat[pr.mi])},aria:'Saldo previsto dia a dia'})}
+    <p class="small muted">Contas correntes de João e Marina, com as entradas previstas, as contas a vencer e um gasto do dia a dia de R$ 75 (média dos últimos 3 meses). O pagamento da fatura cheia do cartão Alfa em 15/11 leva o saldo para o cheque especial.</p></div>`;
+}
+const SC_COL={pos:'#1AE299',warn:'#F2B544',neg:'#f47c6c',good:'#7FB2F5',brand:'#1AE299'};
+const SC_NAME=['Dívidas e parcelas','Regularidade dos aportes','Reserva de emergência','Uso de crédito caro','Resultado do mês','Proteção da família'];
+function scoreHome(){
+  const v=SCORE.v, b=bandOf(v), dv=(v-SCORE.prev)/SCORE.prev*100, r=62, c=2*Math.PI*r, col=SC_COL[b[3]];
+  return `<div class="sc" data-go="score">
+    <div class="sc-t">Score NEO · Saúde financeira</div>
+    <svg class="sc-ring" viewBox="0 0 160 160" width="168" height="168" role="img" aria-label="Score ${v} de 1000, faixa ${b[2]}"><circle cx="80" cy="80" r="${r}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="11"/><circle cx="80" cy="80" r="${r}" fill="none" style="color:${col}" stroke="${col}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${(c*v/1000).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 80 80)"/><text x="80" y="86" text-anchor="middle" font-size="40" font-weight="800" fill="#fff" style="font-family:var(--f-display)">${v}</text><text x="80" y="106" text-anchor="middle" font-size="10" letter-spacing="2" fill="#A3A9B3">SCORE</text></svg>
+    <div><div class="sc-band" style="color:${col}">${b[2]}</div><div class="sc-sub">${dv>=0?'Subiu':'Caiu'} ${P(Math.abs(dv),0)}% nos últimos 30 dias</div></div>
+    <div class="sc-list">${SCORE.comps.map((k,i)=>{const p=Math.round(k[2]/k[3]*100);return `<div class="sc-f"><span>${SC_NAME[i]}</span><b>${p}</b><div class="sc-bar"><i style="width:${p}%;background:${SC_COL[k[4]]}"></i></div></div>`}).join('')}</div>
+    <button class="sc-btn" type="button" data-go="score">Ver relatório completo</button></div>`;
+}
+function perfilCard(){
+  const done=PERFIL.filter(pfDone).length;
+  return `<div class="col" style="gap:12px"><div class="card-head"><h2 style="font-size:1.25rem">Perfil da família</h2><span class="chip">${done} de ${PERFIL.length}</span><button class="link right" type="button" data-act="modal-close">Fechar</button></div>
+    <div class="prog"><b style="width:${done/PERFIL.length*100}%"></b></div>
+    <div style="display:flex;flex-direction:column;gap:2px">${PERFIL.map(p=>`<button class="pf-item" type="button" data-pf="${p.id}"><span class="dot ${pfDone(p)?'ok':''}"></span><span class="grow"><b style="font-weight:500">${p.t}</b><br><span class="small muted">${pfSum(p)}</span></span><span class="small ${pfDone(p)?'muted':'brand-t'}">${pfDone(p)?'Ver':'Responder'}</span></button>`).join('')}</div>
+    <p class="small muted">Toque num item para ver ou editar. O assistente usa essas informações e pergunta o que falta durante a conversa.</p></div>`;
+}
+function lockS(inner,cta){
+  if(S.premium) return inner;
+  return `<div class="lockwrap is-locked"><div class="lock-content" aria-hidden="true">${inner}</div><div class="lock-over"><button class="lock-pill" type="button" data-act="assinar">${ICON.lock}<span>${cta}</span></button></div></div>`;
+}
+function vHome(){
+  const corr=contas.slice(0,3).reduce((a,c)=>a+c.saldo,0);
+  const ent=14800, sai=14236.45, done=PERFIL.filter(pfDone).length;
+  const tot=catsOut.reduce((a,c)=>a+c[1],0), ant=catsOut.reduce((a,c)=>a+c[2],0);
+  const hd=(t,r)=>`<div class="hc-h"><span class="hc-t">${t}</span>${r?`<span class="right">${r}</span>`:''}</div>`;
+  const cents=x=>R(x).replace(/,(\d\d)$/,'<span class="cents">,$1</span>');
+  const LOGO={'Banco Alfa':['A','#F2683C'],'Banco Beta':['B','#6B4EFF'],'Corretora Gama':['G','#0EA5E9']};
+  const saldo=`<div class="card hc"><div class="sl-l">${hd('Saldo em contas')}<div class="sl-v"><span class="hc-v">${cents(corr)}</span><span class="pl dark">+${R(ent-sai)} em outubro</span></div></div>
+    <div class="pl-row">${contas.map(c=>{const lg=LOGO[c.inst]||[c.inst[0],'#888'];return `<span class="pl" title="${c.inst} · ${c.tipo}"><span class="bk" style="background:${lg[1]}" aria-label="${c.inst}">${lg[0]}</span><b>${R0(c.saldo)}</b></span>`}).join('')}</div></div>`;
+  /* Home nova: parcelas e economia repetem os valores da aba Crédito (lá são calculados). */
+  const kp=(t,v,chip)=>`<div class="card hc kp">${hd(t)}<div class="kp-r"><span class="hc-v">${cents(v)}</span>${chip}</div></div>`;
+  const k1=kp('Entradas',ent,'<span class="chip pos">estável</span>');
+  const k3=kp('Parcelas',2318.67,'<span class="chip">16% da renda</span>');
+  const k4=kp('Economia possível',2032.47,'<button class="chip pos kp-go" type="button" data-go="credito">Ver no Crédito</button>');
+  const top=[...catsOut].sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const k2=S.premium?kp('Gastos do mês',tot,`<button class="chip warn kp-go" type="button" data-go="gastos">+${P((tot-ant)/ant*100,0)}% vs. setembro</button>`)
+   :kp('Saídas do mês',sai,`<button class="chip kp-go" type="button" data-act="assinar">Categorias no Premium</button>`);
+  const cart=`<div class="card hc">${hd('Cartões de crédito')}
+    <div class="col" style="gap:10px">${cartoes.map(c=>{const d=(c.usado-c.media)/c.media*100;return `<div><div class="li0"><span class="grow"><b>${c.nome.replace("Banco ","")}</b></span><b>${R(c.usado)}</b></div><div class="prog" style="margin:5px 0"><b style="width:${c.usado/c.limite*100}%"></b></div><div class="li0 small"><span class="grow muted">Vence ${c.venc}</span>${d>10?`<button class="link warn" style="font-size:.78rem" data-go="gastos">${P(d,0)}% acima da média</button>`:`<span class="muted">Dentro da média</span>`}</div></div>`}).join('')}</div></div>`;
+  const maxM=Math.max(...meses.flatMap(m=>[m[1],m[2]]));
+  /* Home nova: resultado de cada mês (entradas menos saídas), positivo para cima e negativo para baixo */
+  const res=meses.map(m=>m[1]-m[2]), maxR=Math.max(...res.map(Math.abs)), lastM=meses.length-1, k=v=>P(v/1000,1)+' mil';
+  const chart=`<div class="card hc">${hd('Receitas e despesas','<span class="legend"><span><i style="background:var(--accent)"></i>Sobrou</span><span><i style="background:var(--neg)"></i>Faltou</span></span>')}
+    <div class="rb">${meses.map((m,i)=>{const v=res[i],h=Math.abs(v)/maxR*100;return `<div class="rb-c${i===lastM?' on':''}" title="${m[0]}: entradas ${R(m[1])}, saídas ${R(m[2])}"><span class="rb-up">${v>=0?`<b class="rb-v">+${R0(v)}</b><i class="pos" style="height:${h}%"></i>`:''}</span><span class="rb-dn">${v<0?`<i class="neg" style="height:${h}%"></i><b class="rb-v neg">-${R0(-v)}</b>`:''}</span><span class="rb-m">${m[0]}</span><span class="rb-s">${k(m[1])} · ${k(m[2])}</span></div>`}).join('')}</div>
+    <p class="small t1" style="font-weight:400"><span class="muted">Passe o mouse ou toque no mês para ver entradas e saídas. Em outubro, os gastos ficaram 29% acima de setembro.</span></p></div>`;
+  const pend=trans.filter(t=>t.cat===null);
+  const pendC=`<div class="card hc pstrip">${pend.length?`<span class="ps-t"><span class="chip brand">${pend.length}</span><b>Gastos aguardando categoria</b></span><div class="ps-l">${pend.slice(0,2).map(t=>`<div class="ps-i"><span class="t1"><b>${R(-t.v)}</b> · ${t.desc}</span><span class="opts">${t.sug.map(c=>`<button class="opt" type="button" data-cat="${t.id}|${c}">${c}</button>`).join('')}</span></div>`).join('')}</div><button class="btn ps-b" type="button" data-act="pend-open">${pend.length>2?`Ver todos (${pend.length})`:'Categorizar'}</button>`:`<span class="ps-t"><span class="chip pos">0</span><b>Tudo categorizado.</b></span><span class="small muted">Os próximos gastos sem categoria aparecem aqui e no WhatsApp.</span>`}</div>`;
+  const alertC=`<div class="card hc">${hd('Alertas')}<div class="fl">
+    <div class="li"><span class="chip neg">Juros</span><span class="t1 grow" title="Cartão Alfa no rotativo: R$ 612,40 de juros em outubro">Rotativo do Alfa: R$ 612,40 em outubro</span><button class="link" data-go="credito">Analisar</button></div>
+    <div class="li"><span class="chip warn">Tarifa</span><span class="t1 grow" title="Pacote de serviços do Banco Alfa custa R$ 514,80 por ano">Pacote do Alfa: R$ 514,80 por ano</span><button class="link" data-go="marketplace" data-mkt="conta">Comparar</button></div>
+    <div class="li"><span class="chip warn">Aumento</span><span class="t1 grow" title="Energia 18% acima da média de 3 meses">Energia 18% acima da média</span></div>
+    <div class="li"><span class="chip warn">Assinatura</span><span class="t1 grow" title="App de idiomas subiu de R$ 29,90 para R$ 38,10">App de idiomas subiu para R$ 38,10</span><button class="link" data-go="gastos" data-gtab="assinaturas">Ver</button></div>
+    <div class="li"><span class="chip brand">Vence</span><span class="t1 grow" title="Fatura do cartão Alfa vence em 15/11">Fatura do Alfa vence dia 15/11: R$ 6.842,30</span><button class="link" data-go="gastos" data-gtab="geral">Ver contas</button></div>
+  </div></div>`;
+  const txLink=S.premium?`<button class="link" data-go="gastos" data-gtab="trans">Ver todas</button>`:'';
+  const txC=`<div class="card hc">${hd('Movimentações',txLink)}<div class="fl">${trans.slice(0,5).map(t=>`<div class="li"><span class="grow"><span class="t1">${t.desc}</span><span class="small muted">${t.d} · ${t.conta}${S.premium?` · ${t.cat||'<span class="warn">sem categoria</span>'}`:''}</span></span><b class="${t.v>0?'pos':''}">${t.v>0?'+':''}${R(t.v)}</b></div>`).join('')}</div></div>`;
+  return `
+  <div class="page-head hm-head"><div><h1>Boa tarde, João</h1><p>Sexta-feira, 6 de novembro de 2026</p></div>
+    <button class="pf-strip right" type="button" data-act="pf-all"><span>Perfil da família</span><span class="prog"><b style="width:${done/PERFIL.length*100}%"></b></span><b>${done} de ${PERFIL.length}</b><span class="brand-t">${done<PERFIL.length?'Completar':'Ver'}</span></button></div>
+  <div class="hm v2">
+    <div class="hm-c a-pend">${lockS(pendC,'Categorias dos gastos no Premium')}</div>
+    <div class="hm-c a-saldo">${saldo}</div>
+    <div class="hm-c a-k1">${k1}</div><div class="hm-c a-k2">${k2}</div><div class="hm-c a-k3">${k3}</div><div class="hm-c a-k4">${k4}</div>
+    <div class="hm-c a-cart">${cart}</div>
+    <div class="hm-c a-score">${lockS(scoreHome(),'Descubra o seu score no Premium')}</div>
+    <div class="hm-c a-chart">${chart}</div>
+    <div class="hm-c a-alert">${lockS(alertC,'Receba alertas no Premium')}</div>
+    <div class="hm-c a-tx">${txC}</div>
+  </div>`;
+}
+
+/* ---------- GASTOS ---------- */
+function vGastos(){
+  const tot=catsOut.reduce((a,c)=>a+c[1],0), ant=catsOut.reduce((a,c)=>a+c[2],0);
+  const rows=catsOut.map(c=>{const p=c[1]/RENDA*100, ref=REF[c[0]];return {n:c[0],v:c[1],ant:c[2],p,ref,over:p>ref,exc:c[1]-RENDA*ref/100}});
+  const over=rows.filter(r=>r.over).sort((a,b)=>b.exc-a.exc);
+  const exc=over.reduce((a,r)=>a+r.exc,0);
+  const tabs=[['geral','Visão geral'],['categorias','Categorias'],['assinaturas','Assinaturas'],['parcelas','Parcelamentos'],['trans','Transações']];
+  const sub=`<div class="pills" role="group" aria-label="Seções de gastos">${tabs.map(t=>`<button class="pill" type="button" data-gtab="${t[0]}" aria-pressed="${S.gTab===t[0]}">${t[1]}</button>`).join('')}</div>`;
+  let body='';
+  if(S.gTab==='geral'){
+    const jurosCard=`<div class="card"><h2>Juros e encargos pagos em 2026</h2><div class="kpi"><div class="val neg">${R(4982.15)}</div><div class="sub">de janeiro a outubro</div></div>
+      <div class="bars">${[['Financiamento do carro',2904.05],['Rotativo do cartão',1836.20],['IOF',154.10],['Tarifas',87.80]].map(c=>`<div class="bar-row"><span>${c[0]}</span><div class="bar-track"><div class="bar-fill neg" style="width:${c[1]/2904.05*100}%"></div></div><span class="num" style="text-align:right">${R0(c[1])}</span></div>`).join('')}</div>
+      <button class="link" data-go="credito" style="align-self:flex-start">Reduzir juros na aba Crédito</button></div>`;
+    const mxO=Math.max(...over.map(r=>r.p))*1.08;
+    const overCard=`<div class="card over-card"><div class="card-head"><div><h2>Acima do indicado para a renda</h2><p class="small muted">Outubro, para uma renda de ${R(RENDA)} por mês</p></div><div class="right" style="text-align:right"><div class="over-tot neg">+${R(exc)}</div><div class="small muted">em ${over.length} categorias</div></div></div>
+      <div class="over-list">${over.map(r=>{const d=(r.v-r.ant)/r.ant*100;return `<div class="over-row"><div><b>${r.n}</b><div class="small ${d>10?'neg':'muted'}">${d>0?'+':''}${P(d,0)}% contra setembro</div></div><div><div class="refbar wide"><b class="over" style="width:${r.p/mxO*100}%"></b><i style="left:${r.ref/mxO*100}%" title="Indicado"></i></div><div class="small muted" style="margin-top:7px">${R(r.v)}, ${P(r.p,1)}% da renda. Indicado: até ${P(r.ref,r.ref<1?1:0)}%, ou ${R0(RENDA*r.ref/100)}</div></div><span class="amt neg">+${R(r.exc)}</span></div>`}).join('')}</div>
+      <p class="small muted">O traço em cada barra marca o indicado. As referências são um ponto de partida da NEO e se ajustam ao plano de cada família.</p>
+      <div class="btn-row"><button class="btn" type="button" data-gtab="categorias">Ver todas as categorias</button><button class="btn sec" type="button" data-go="assistente">Pedir ajuda ao assistente para cortar</button></div></div>`;
+    body=`<div class="grid g4">
+      <div class="card kpi"><span class="label">Gastos em outubro</span><span class="val">${R(tot)}</span><span class="sub">Sem contar os aportes</span></div>
+      <div class="card kpi"><span class="label">Contra setembro</span><span class="val neg">+${P((tot-ant)/ant*100,0)}%</span><span class="sub">${R(tot-ant)} a mais</span></div>
+      <div class="card kpi"><span class="label">Acima do indicado</span><span class="val">${over.length} categorias</span><span class="sub">${R(exc)} além da referência</span></div>
+      <div class="card kpi"><span class="label">Aportes em outubro</span><span class="val">${R(APORTE.atual)}</span><span class="sub"><span class="warn">${P(APORTE.atual/RENDA*100,1)}% da renda.</span> Indicado: ${APORTE.ref}% ou mais</span></div>
+    </div>
+    ${overCard}
+    <div class="grid g2">${vencCard()}${jurosCard}</div>`;
+  } else if(S.gTab==='categorias'){
+    const mx=35;
+    body=`<div class="card"><div class="card-head"><h2>Categorias em outubro</h2><span class="small muted right">renda da família: ${R(RENDA)}</span></div>
+      <div class="tbl-box"><table><thead><tr><th>Categoria</th><th class="num">Gasto</th><th>Parte da renda</th><th class="num">Indicado</th><th>Situação</th><th class="num">Contra setembro</th></tr></thead><tbody>
+      ${rows.map(r=>{const d=(r.v-r.ant)/r.ant*100;return `<tr><td><b style="font-weight:600">${r.n}</b></td><td class="num">${R(r.v)}</td><td><div style="display:flex;align-items:center;gap:10px"><div class="refbar"><b class="${r.over?'over':''}" style="width:${Math.min(100,r.p/mx*100)}%"></b><i style="left:${r.ref/mx*100}%" title="Indicado"></i></div><span class="small">${P(r.p,1)}%</span></div></td><td class="num">até ${P(r.ref,r.ref<1?1:0)}%</td><td>${r.over?`<span class="chip neg">Acima em ${R0(r.exc)}</span>`:'<span class="chip pos">Dentro</span>'}</td><td class="num ${d>10?'neg':d<-10?'pos':'muted'}">${d>0?'+':''}${P(d,0)}%</td></tr>`}).join('')}
+      <tr><td><b style="font-weight:600">Aportes</b></td><td class="num">${R(APORTE.atual)}</td><td><div style="display:flex;align-items:center;gap:10px"><div class="refbar"><b style="width:${APORTE.atual/RENDA*100/mx*100}%;background:var(--pos)"></b><i style="left:${APORTE.ref/mx*100}%"></i></div><span class="small">${P(APORTE.atual/RENDA*100,1)}%</span></div></td><td class="num">${APORTE.ref}% ou mais</td><td><span class="chip warn">Abaixo</span></td><td class="num neg">${P((APORTE.atual-APORTE.ant)/APORTE.ant*100,0)}%</td></tr>
+      </tbody></table></div>
+      <p class="small muted">O traço em cada barra marca o indicado. As referências são um ponto de partida da NEO e se ajustam ao plano de cada família.</p></div>`;
+  } else if(S.gTab==='assinaturas'){
+    const m=subs.reduce((a,s)=>a+s[3],0);
+    body=`<div class="grid g3">
+      <div class="card kpi"><span class="label">Assinaturas ativas</span><span class="val">${subs.length}</span><span class="sub">Detectadas nas faturas</span></div>
+      <div class="card kpi"><span class="label">Gasto por mês</span><span class="val">${R(m)}</span><span class="sub">${P(m/RENDA*100,1)}% da renda</span></div>
+      <div class="card kpi"><span class="label">Projeção em 12 meses</span><span class="val">${R(m*12)}</span><span class="sub">Se nada mudar</span></div></div>
+    <div class="card"><h2>Suas assinaturas</h2><div class="rows">${subs.map(s=>`<div class="row"><span class="ico">${s[0].slice(0,2).toUpperCase()}</span><div class="grow"><div class="t">${s[0]}</div><div class="s">${s[1]} · cobrança no ${s[2]}${s[4]?` · <span class="warn">${s[4]}</span>`:''}</div></div><span class="amt">${R(s[3])}</span></div>`).join('')}</div>
+    <p class="small muted">A NEO avisa um dia antes de cada cobrança e quando o valor de uma assinatura muda.</p></div>`;
+  } else if(S.gTab==='parcelas'){
+    const m=parcelas.reduce((a,p)=>a+p[2],0), rest=parcelas.reduce((a,p)=>a+p[2]*(p[4]-p[3]),0);
+    body=`<div class="grid g3">
+      <div class="card kpi"><span class="label">Compras parceladas</span><span class="val">${parcelas.length}</span><span class="sub">Em andamento no cartão</span></div>
+      <div class="card kpi"><span class="label">Parcelas por mês</span><span class="val">${R(m)}</span><span class="sub">Já entram nas próximas faturas</span></div>
+      <div class="card kpi"><span class="label">Ainda falta pagar</span><span class="val">${R(rest)}</span><span class="sub">Última parcela em agosto de 2027</span></div></div>
+    <div class="card"><h2>Em andamento</h2><div class="rows">${parcelas.map(p=>`<div class="row"><div class="grow"><div class="t">${p[0]}</div><div class="s">${p[1]} · parcela ${p[3]} de ${p[4]} · faltam ${R(p[2]*(p[4]-p[3]))}</div><div class="prog" style="margin-top:6px"><b style="width:${p[3]/p[4]*100}%"></b></div></div><span class="amt">${R(p[2])}</span></div>`).join('')}</div></div>`;
+  } else {
+    body=`<div class="card"><div class="card-head"><div><h2>Transações</h2><p class="small muted">Novembro, até o dia 6</p></div><input id="txSearch" class="search right" type="search" placeholder="Buscar por descrição, conta ou categoria" autocomplete="off"></div>
+      ${txTable(trans,true)}<p id="txEmpty" class="muted" hidden>Nenhuma transação encontrada.</p></div>`;
+  }
+  return `<div class="page-head"><div><h1>Gastos</h1><p>Para onde vai o dinheiro da família, com o que está acima do indicado para a renda.</p></div></div>
+  ${lock(`<div style="display:flex;flex-direction:column;gap:16px">${trans.some(t=>t.cat===null)?pendCard():''}${sub}${body}</div>`,'Gastos por categoria','Assine o Premium e veja para onde vai o seu dinheiro, o que está acima do indicado para a sua renda e todas as suas assinaturas.')}`;
+}
+
+/* ---------- SCORE ---------- */
+function vScore(){
+  const v=SCORE.v, b=bandOf(v), next=SCORE.bands[SCORE.bands.indexOf(b)+1], view=S.scV||'resumo';
+  const H=SCORE.hist, sel=S.scM==null?H.length-1:S.scM, last=sel===H.length-1, cur=SC_HIST[sel], ant=sel>0?SC_HIST[sel-1]:null;
+  const back=(to,label)=>`<div><button class="link back" type="button" data-scv="${to}">${CHEV_L}${label}</button></div>`;
+  const nota=`<p class="small muted">Não é score de crédito e não é consultado por bancos. Mede a saúde das finanças da família com os dados das contas e do perfil. Os pesos deste protótipo são de exemplo.</p>`;
+  let inner;
+  if(view==='analise'){
+    const mbars=`<div class="mbars">${H.map((h,i)=>{const t=bandOf(h[1])[3];return `<button class="mbar" type="button" data-scm="${i}" aria-pressed="${i===sel}" aria-label="${SC_MES[h[0]]}: ${h[1]} pontos"><span class="mb-track"><span class="mb" style="height:${Math.max(24,Math.min(100,(h[1]-440)/1.6))}%;background:var(--${t}-soft);color:var(--${t})"><b>${h[1]}</b></span></span><span class="mb-l">${h[0]}</span></button>`}).join('')}</div>`;
+    const dM=ant?H[sel][1]-H[sel-1][1]:0;
+    const row=i=>{const c=SCORE.comps[i], fb=fxBand(cur[i]/c[3]), d=ant?cur[i]-ant[i]:0;
+      return `<details class="fx"><summary><span class="grow"><b>${SC_NAME[i]}</b><span class="fx-chips"><span class="chip ${fb[1]}">${fb[0]}</span>${d?`<span class="chip trend ${d>0?'pos':'neg'}">${ARW(d)}${d>0?'Melhor':'Pior'} que ${H[sel-1][0].toLowerCase()}</span>`:''}</span></span>${CHEV}</summary>
+        <div class="fx-body"><div class="meter" style="margin:0"><b style="width:${cur[i]/c[3]*100}%;background:var(--${fb[1]})"></b></div><p class="small muted">${cur[i]} de ${c[3]} pontos em ${SC_MES[H[sel][0]]}</p><p>${c[5]}</p>${last?`<p><b style="font-weight:600">Hoje:</b> ${c[1]}.</p>`:''}<p class="small muted">${SC_TIP[i]}</p><div><button class="btn sec" type="button" data-go="${FX_GO[i][0]}">${FX_GO[i][1]}</button></div></div></details>`};
+    inner=`<div class="col">${back('resumo','Score · '+v)}
+    <div class="grid g-an">
+      <div class="card"><h2 class="big">O que está pesando no meu score?</h2>${mbars}
+        <p class="small muted">Toque num mês para ver o que pesou nele. Em novembro, a renda comprometida caiu de 19% para 16% com o fim de um parcelamento, e outubro fechou no positivo. Em setembro e outubro, o uso do rotativo segurou o score.</p></div>
+      <div class="card"><div class="mnav"><button type="button" data-scm="${Math.max(0,sel-1)}" ${sel===0?'disabled':''} aria-label="Mês anterior">${CHEV_L}</button><div><h2>${SC_MES[H[sel][0]][0].toUpperCase()+SC_MES[H[sel][0]].slice(1)}</h2><span class="small muted">Score ${H[sel][1]}${ant?` · ${dM>=0?'+':''}${dM} contra ${SC_MES[H[sel-1][0]]}`:''}</span></div><button type="button" data-scm="${Math.min(H.length-1,sel+1)}" ${last?'disabled':''} aria-label="Próximo mês">${CHEV_R}</button></div>
+        <div class="fx-list">${FX_GROUPS.map(g=>`<div class="fx-group">${g[0]}</div>${g[1].map(row).join('')}`).join('')}</div></div>
+    </div>
+    <button class="card pes" type="button" data-scv="outras"><span class="grow"><h2>Outras coisas que influenciam no score</h2><span class="small muted">Hábitos e cadastros que também contam para o número.</span></span><span class="btn sec">Saiba mais</span></button>
+    ${nota}</div>`;
+  } else if(view==='outras'){
+    inner=`<div class="col">${back('resumo','Score · '+v)}
+    <div class="card" style="max-width:860px"><h2 class="big">Outras coisas que influenciam no score</h2>
+      <div class="fx-list">${SC_DICAS.map(g=>`<div class="fx-group">${g[0]}</div>${g[1].map(t=>`<details class="fx"><summary><span class="grow"><b>${t[0]}</b></span>${t[1]?`<span class="chip ${t[1]==='Ok'?'pos':''}">${t[1]}</span>`:''}${CHEV}</summary><div class="fx-body"><p>${t[2]}</p>${t[3]?`<div><button class="btn sec" type="button" data-go="${t[3]}"${t[4]==='Ver parcelamentos'?' data-gtab="parcelas"':''}>${t[4]}</button></div>`:''}</div></details>`).join('')}`).join('')}</div></div>
+    ${nota}</div>`;
+  } else {
+    const d=v-SCORE.prev, at=SCORE.comps.filter((c,i)=>SC_HIST[H.length-1][i]/c[3]<.6).length;
+    inner=`<div class="col">
+    <div class="grid g-sc">
+      <div class="card sc-hero">${scRing(v,300)}
+        <span class="chip ${b[3]}" style="font-size:.85rem;padding:5px 14px">Faixa ${b[2]}</span>
+        <p style="text-align:center;max-width:380px">${d>=0?'Subiu':'Caiu'} <b class="${d>=0?'pos':'neg'}">${Math.abs(d)} pontos</b> desde outubro.${next?` Faltam ${next[0]-v} pontos para a faixa ${next[2]}.`:''}</p>
+        <div style="width:100%;margin-top:auto"><div class="bands"><span style="background:var(--neg)"></span><span style="background:var(--warn)"></span><span style="background:var(--good)"></span><span style="background:var(--pos)"></span><i style="left:${v/10}%"></i></div>
+        <div class="bands lbl"><span>Crítico<br>0 a 399</span><span>Atenção<br>400 a 599</span><span>Bom<br>600 a 799</span><span>Excelente<br>800 a 1000</span></div></div></div>
+      <div class="col">
+        <button class="card pes" type="button" data-scv="analise"><span class="grow"><h2>O que está pesando no meu score?</h2><span class="small muted">Confira a análise completa, mês a mês</span></span>${at?`<span class="chip warn">${at} ${at===1?'ponto':'pontos'} de atenção</span>`:''}${CHEV_R}</button>
+        <div class="card"><h2>Recomendações</h2>
+          <div class="rec-list">${SCORE.acoes.map(a=>`<button class="rec-row" type="button" data-go="${a[3]}"><span class="grow"><b>${a[0]}</b><span class="small muted">${a[1]}</span></span><span class="chip pos">até +${a[2]}</span>${CHEV_R}</button>`).join('')}</div>
+          <p class="small muted">Os pontos são estimativas. O score é recalculado a cada sincronização das contas.</p></div>
+        <button class="card pes" type="button" data-scv="outras"><span class="grow"><h2>Outras coisas que influenciam no score</h2><span class="small muted">Hábitos e cadastros que também contam para o número.</span></span><span class="btn sec">Saiba mais</span></button>
+      </div>
+    </div>
+    ${nota}</div>`;
+  }
+  return `<div class="page-head"><div><h1>Score de saúde financeira</h1><p>Um número de 0 a 1000 que resume como estão as finanças da família, e o que fazer para melhorar.</p></div></div>
+  ${lock(inner,'Score de saúde financeira','Assine o Premium e descubra o seu score de saúde financeira, o que pesa nele e o que fazer para subir.')}`;
+}
+
+/* ---------- ASSISTENTE ---------- */
+const PERFIL=[
+  {id:'civil',t:'Estado civil e regime de bens',n:2,f:[['Estado civil','União estável'],['Regime de bens','Comunhão parcial'],['Desde','2019']],why:'Define como patrimônio e dívidas se dividem e pesa nas decisões de seguro e sucessão.'},
+  {id:'filhos',t:'Filhos e dependentes',n:1,f:[['Filhos','Pedro, 4 anos'],['Outros dependentes','Nenhum']],why:'Muda o valor do seguro de vida, a reserva de emergência e os objetivos de estudo.'},
+  {id:'renda',t:'Renda da família',n:1,f:[['Renda total','R$ 14.800,00 por mês'],['João','R$ 9.200,00, CLT'],['Marina','R$ 5.600,00, CLT'],['Outras rendas','Nenhuma']],src:'Salários detectados nas contas conectadas.',why:'É a base de todas as contas: renda comprometida, aportes e o que cabe no orçamento.'},
+  {id:'moradia',t:'Moradia',n:2,f:[['Situação','Aluguel'],['Aluguel','R$ 2.470,00 por mês'],['Condomínio','R$ 980,00 por mês']],src:'Valores detectados nas contas conectadas.',why:'Indica se faz sentido planejar a compra de um imóvel e quanto da renda já vai para morar.'},
+  {id:'prev',t:'Previdência privada',n:2,f:[['Tipo','VGBL, tabela regressiva'],['Saldo','R$ 42.000,00'],['Aporte','R$ 1.200,00 por mês']],why:'Entra na projeção da aposentadoria e na proteção da família.'},
+  {id:'vida',t:'Seguro de vida',n:2,f:[['Tem seguro de vida?',''],['Capital segurado',''],['Seguradora','']],why:'Com filho pequeno, é o que protege a família se a renda faltar.',mkt:'vida'},
+  {id:'auto',t:'Seguro do carro',n:2,f:[['Tem seguro do carro?',''],['Seguradora',''],['Vencimento da apólice','']],why:'Um sinistro sem seguro pode consumir a reserva inteira.',mkt:'auto'},
+  {id:'saude',t:'Plano de saúde',n:2,f:[['Tem plano de saúde?',''],['Quem está coberto',''],['Pago por','']],why:'Despesas médicas sem cobertura são uma das principais causas de endividamento.'},
+  {id:'prevf',t:'Previdência fechada',n:2,f:[['Tem pela empresa?',''],['Contribuição mensal',''],['Contrapartida da empresa','']],why:'A contrapartida da empresa costuma ser o melhor rendimento disponível.'},
+  {id:'sonhos',t:'Sonhos e objetivos',n:1,f:[['Objetivos','Casamento, trocar de carro e aposentadoria aos 60'],['Prioridade','Casamento em junho de 2027']],why:'São o ponto de partida do plano financeiro.'}
+];
+const pfDone=p=>!!p.f[0][1];
+const pfSum=p=>pfDone(p)?p.f.slice(0,p.n).map(x=>x[1]).filter(Boolean).join(' · '):'Falta responder';
+const ANS={
+  'Quanto gastamos com mercado em outubro?':()=>`<p>Foram <b>R$ 2.140,35</b> em mercado em outubro, 31% a mais que em setembro (R$ 1.640,00).</p><p>Isso é 14,5% da renda da família. A referência para a renda de vocês é até 12%, ou R$ 1.776,00. Três compras ainda aguardam categoria e podem mudar esse número.</p><div class="btn-row"><button class="btn sec" type="button" data-go="gastos">Ver em Gastos</button></div>`,
+  'O que vence esta semana?':()=>`<p>Até quinta, 12/11, vence só o <b>condomínio, R$ 980,00, em 10/11</b>.</p><p>Vale olhar a semana seguinte: a fatura do cartão Alfa, de R$ 6.842,30, vence em 15/11, e o saldo previsto não cobre o valor cheio.</p><div class="btn-row"><button class="btn sec" type="button" data-go="gastos" data-gtab="geral">Ver contas a vencer</button><button class="btn sec" type="button" data-go="credito">Ver opções para o cartão</button></div>`,
+  'Vale a pena antecipar o financiamento?':()=>`<p><b>Ainda não.</b> O financiamento do carro custa 2,39% ao mês e o rotativo do cartão Alfa, 13,9% ao mês. Cada real que sobrar rende mais quitando o rotativo primeiro.</p><p>Depois disso, antes de antecipar, vale pedir a portabilidade: há oferta a 1,72% ao mês, que reduz a parcela sem tirar dinheiro da reserva.</p><div class="btn-row"><button class="btn sec" type="button" data-go="credito">Ver a portabilidade</button></div>`
+};
+const GOAL_EX='Nosso sonho é fazer uma viagem de R$ 30 mil daqui a 2 anos';
+S.convs=[
+  {id:'carro',t:'Troca de carro',d:'Hoje',preset:true,msgs:[]},
+  {id:'rotativo',t:'Sair do rotativo do cartão',d:'Ontem',msgs:[{q:'Como saímos do rotativo do cartão Alfa?',a:`<p>O rotativo do cartão Alfa custa 13,9% ao mês e levou <b>R$ 612,40</b> em juros só em outubro. É a dívida mais cara de vocês, então é a primeira a resolver.</p><p>O caminho mais barato é trocar esse saldo por um crédito com juros menores e parcela fixa. A aba Crédito já analisou o cartão e mostra as opções lado a lado.</p><div class="btn-row"><button class="btn sec" type="button" data-go="credito">Analisar na aba Crédito</button></div>`}]},
+  {id:'casamento',t:'Aporte do casamento em outubro',d:'28/10',msgs:[{q:'Não conseguimos guardar para o casamento em outubro. E agora?',a:`<p>Outubro fechou com os gastos 29% acima de setembro, e por isso o aporte de R$ 3.000,00 não saiu. Já são <b>R$ 9.000,00 guardados</b> de R$ 36.000,00.</p><p>Há duas formas de recuperar: aumentar os próximos aportes para R$ 3.375,00 até junho, ou manter R$ 3.000,00 e adiar o casamento em um mês. A escolha fica registrada no Plano financeiro.</p><div class="btn-row"><button class="btn sec" type="button" data-go="plano">Escolher no Plano financeiro</button></div>`}]}
+];
+S.conv=null; S.props={}; S.off={}; S.planNote=null; S.txAll=false;
+const CHECK='<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.5 6.2l2.4 2.4 4.6-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+// objetivos do plano, com o aporte de cada um
+function planGoals(){
+  const cas=S.casamento==='aumentar'?3375:3000;
+  const at=apos(AP.aporte,AP.alvo), ap=S.aposentadoria==='aporte'?at.aporteNec:S.aposentadoria==='misto'?apos(0,65).aporteNec:AP.aporte;
+  return [{k:'cas',nome:'Casamento',aporte:cas,info:R(cas)+' por mês'},{k:'ap',nome:'Aposentadoria aos 60',aporte:ap,info:R(ap)+' por mês'},{k:'res',nome:'Reserva de emergência',aporte:0,info:'Começa em julho de 2027'},
+    ...S.goals.map((g,i)=>({k:'g'+i,nome:g.nome,aporte:g.aporte,info:R(g.aporte)+' por mês'}))];
+}
+const isOff=k=>k[0]==='g'?!!S.goals[Number(k.slice(1))].off:!!S.off[k];
+const SOBRA=563.55;
+function parseGoal(q){
+  const t=q.toLowerCase();
+  let valor=null, m=t.match(/(\d+(?:[.,]\d+)?)\s*(mil|k)\b/);
+  if(m) valor=Math.round(parseFloat(m[1].replace(',','.'))*1000);
+  else if((m=t.match(/r\$\s*([\d.]+)/))) valor=Number(m[1].replace(/\./g,''));
+  else if((m=t.match(/\b(\d{4,7})\b/))&&Number(m[1])>2100) valor=Number(m[1]);
+  let prazo=null; m=t.match(/(\d+)\s*(anos?|mes(?:es)?|mês)/);
+  if(m) prazo=Number(m[1])*(m[2][0]==='a'?12:1); else if(/ano que vem|pr[oó]ximo ano/.test(t)) prazo=12;
+  const nome=/viage|viaj/.test(t)?'Viagem':/casa|apartamento|im[oó]vel/.test(t)?'Casa própria':/carro|moto/.test(t)?'Trocar de carro':/faculdade|escola|estud|curso/.test(t)?'Estudos':/reforma/.test(t)?'Reforma':/neg[oó]cio|empresa/.test(t)?'Negócio próprio':'Novo objetivo';
+  const isGoal=/(sonh|objetivo|meta|plano|planej|quer(o|emos|ia|[ií]amos)|pretend|vamos|juntar|guardar)/.test(t);
+  return {valor,prazo,nome,isGoal};
+}
+function newProp(o){const id='p'+(Object.keys(S.props).length+1);const keep={};planGoals().forEach(g=>{if(!isOff(g.k)) keep[g.k]=true});S.props[id]={id,keep,state:'open',...o};return id}
+function propHtml(id){
+  const p=S.props[id], gs=planGoals().filter(g=>g.k in p.keep);
+  const lista=k=>gs.filter(g=>p.keep[g.k]===k).map(g=>g.nome);
+  if(p.state==='no') return `<p>Certo, não levei nada para o Plano financeiro. Se virar um objetivo, é só me dizer.</p>`;
+  if(p.state==='ok') return `<p><b>${p.nome}</b> agora é um objetivo no Plano financeiro, com ${p.parcela?'parcela':'aporte'} de ${R(p.aporte)} por mês.</p><p class="small muted">Mantidos: ${lista(true).join(', ')||'nenhum'}.${lista(false).length?` Pausados: ${lista(false).join(', ')}.`:''}</p><div class="btn-row"><button class="btn sec" type="button" data-go="plano">Abrir o Plano financeiro</button></div>`;
+  const livre=SOBRA+gs.filter(g=>!p.keep[g.k]).reduce((a,g)=>a+g.aporte,0), falta=p.aporte-livre;
+  return `<p>${p.intro||'Entendi que isso é um objetivo de vocês.'} Posso levar para o Plano financeiro assim:</p>
+    <div class="dl"><span class="muted">Objetivo</span><span><b>${p.nome}</b></span><span class="muted">Valor</span><span>${R0(p.valor)}</span><span class="muted">Prazo</span><span>${p.prazo} meses</span><span class="muted">${p.parcela?'Parcela':'Aporte'}</span><span>${R(p.aporte)} por mês</span></div>
+    <p><b>Antes de alterar o plano, confirme quais objetivos continuam:</b></p>
+    <div class="keep">${gs.map(g=>`<button type="button" aria-pressed="${p.keep[g.k]}" data-keep="${id}|${g.k}"><span class="box">${p.keep[g.k]?CHECK:''}</span><span class="grow">${g.nome}</span><span class="small muted">${p.keep[g.k]?g.info:'Pausar'}</span></button>`).join('')}</div>
+    <p class="small ${falta>0?'warn':'pos'}" style="font-weight:600">${falta>0?`Com essa escolha, faltam ${R(falta)} por mês para o novo objetivo caber no orçamento. Dá para confirmar assim mesmo e ajustar o prazo no plano.`:`Com essa escolha, o novo objetivo cabe no orçamento, com folga de ${R(-falta)} por mês.`}</p>
+    <p class="small muted">Hoje sobram ${R(SOBRA)} por mês depois dos gastos e dos aportes. Objetivo pausado não é apagado: fica no plano e pode ser reativado.</p>
+    <div class="btn-row"><button class="btn" type="button" data-act="prop-ok" data-id="${id}">Confirmar e abrir o Plano financeiro</button><button class="btn sec" type="button" data-act="prop-no" data-id="${id}">Não é um objetivo</button></div>`;
+}
+function propConfirm(id){
+  const p=S.props[id], gs=planGoals().filter(g=>g.k in p.keep);
+  gs.forEach(g=>{const off=!p.keep[g.k];if(g.k[0]==='g') S.goals[Number(g.k.slice(1))].off=off; else S.off[g.k]=off});
+  const livre=SOBRA+gs.filter(g=>!p.keep[g.k]).reduce((a,g)=>a+g.aporte,0), falta=p.aporte-livre;
+  S.goals.push({nome:p.nome,valor:p.valor,prazo:p.prazo,guardado:0,aporte:p.aporte,fit:falta>0?['Faltam '+R0(falta)+' por mês','warn']:['Cabe no orçamento','pos'],src:'assistente'});
+  const pa=gs.filter(g=>!p.keep[g.k]).map(g=>g.nome);
+  S.planNote=`<b>${p.nome}</b> veio da conversa com o assistente. Objetivos mantidos: ${gs.filter(g=>p.keep[g.k]).map(g=>g.nome).join(', ')||'nenhum'}.${pa.length?` Pausados: ${pa.join(', ')}.`:''}`;
+  p.state='ok';
+}
+function carPreset(){
+  const valor=65000;
+  const fin=pmt(valor,0.0179,48), cons=valor*1.13/80, rendaComp=(612.40+220+fin)/14800*100, dif=fin*48-cons*80;
+  const vida=PERFIL.find(p=>p.id==='vida');
+  return `
+  <div class="msg user">Queremos trocar de carro daqui a uns 18 meses, um de R$ 80 mil. Qual a melhor forma?</div>
+  <div class="msg bot"><span class="who-l">Assistente NEO</span><div class="bubble">
+    <p>Olhei as contas de vocês antes de responder. Hoje 16% da renda já vai para parcelas, a reserva cobre menos de um mês de despesas e o cartão Alfa entrou no rotativo em setembro e outubro.</p>
+    <p>Considerei R$ 15 mil de entrada com a venda do carro atual, já descontando o saldo do financiamento. Faltam ${R0(valor)}. Comparei quatro caminhos:</p>
+    <div class="tbl-box"><table><thead><tr><th>Caminho</th><th class="num">Parcela</th><th class="num">Custo total</th><th>Efeito no orçamento</th></tr></thead><tbody>
+      <tr><td>Financiar em 48x (1,79% a.m.)</td><td class="num">${R(fin)}</td><td class="num">${R0(fin*48)}</td><td>Custa ${R0(dif)} a mais que o consórcio</td></tr>
+      <tr class="rec"><td><b>Consórcio sem lance</b> (80 meses)</td><td class="num">${R(cons)}</td><td class="num">${R0(cons*80)}</td><td>Cabe no orçamento depois do casamento</td></tr>
+      <tr><td>Juntar e comprar à vista</td><td class="num">${R(valor/18)}</td><td class="num">${R0(valor)}</td><td>Não cabe junto com a meta do casamento</td></tr>
+      <tr><td>Esperar e quitar o rotativo antes</td><td class="num">Sem parcela</td><td class="num">Sem custo</td><td>Libera cerca de R$ 600 por mês em juros</td></tr>
+    </tbody></table></div>
+    <p><b>Minha indicação:</b> primeiro, sair do rotativo. Depois, consórcio sem lance, porque vocês não têm pressa e a parcela fica perto da metade do financiamento. Financiar custaria cerca de ${R0(dif)} a mais e deixaria ${P(rendaComp,0)}% da renda presa em parcelas, sem que vocês precisem do carro agora.</p>
+    <div class="btn-row"><button class="btn" type="button" data-go="marketplace" data-mkt="consorcio" data-pre="consorcio:mod=veiculo,valor=65000,quando=medio,lance=nao">Ver consórcios no Marketplace</button><button class="btn sec" type="button" data-go="credito">Analisar o rotativo</button><button class="btn sec" type="button" data-act="objcarro">Criar objetivo no plano</button></div>
+  </div></div>
+  <div class="msg bot"><span class="who-l">Assistente NEO</span><div class="bubble">
+    <p>Uma pergunta para completar o perfil: vocês têm seguro de vida? Com o Pedro pequeno, isso pesa bastante no plano.</p>
+    ${pfDone(vida)?`<p class="small muted">Resposta registrada no perfil: ${vida.f[0][1]}. <button class="link" data-pf="vida">Ver ou editar</button></p>`:S.perfilSeguro?`<p class="small muted">Tudo bem, pergunto de novo mais tarde.</p>`:`<div class="opts"><button class="opt" type="button" data-seg="Sim">Temos</button><button class="opt" type="button" data-seg="Não">Não temos</button><button class="opt" type="button" data-seg="depois">Responder depois</button></div>`}
+  </div></div>`;
+}
+function vAssist(){
+  const cur=S.premium?S.conv:'carro', cv=S.convs.find(c=>c.id===cur);
+  const composer=ph=>`<form class="composer" id="composer"><input id="ask" type="text" placeholder="${ph}" autocomplete="off" aria-label="Mensagem para o assistente"><button class="btn" type="submit">Enviar</button></form>`;
+  const side=`<div class="card as-side">
+      <button class="btn" type="button" data-act="conv-new">Nova conversa</button>
+      <span class="small muted" style="padding:6px 10px 0">Conversas anteriores</span>
+      <div class="as-list">${S.convs.map(c=>`<button class="as-conv" type="button" data-conv="${c.id}" aria-current="${c.id===cur}"><span class="t">${c.t}</span><span class="small muted">${c.d}</span></button>`).join('')}</div>
+    </div>`;
+  const main=cv?`<div class="card chat"><div class="card-head"><h2>${cv.t}</h2><span class="small muted right">${cv.d}</span></div>
+      <div class="msgs">${cv.preset?carPreset():''}${cv.msgs.map(m=>`${m.q?`<div class="msg user">${m.q}</div>`:''}<div class="msg bot"><span class="who-l">Assistente NEO</span><div class="bubble">${m.prop?propHtml(m.prop):m.a}</div></div>`).join('')}</div>
+      ${composer('Continue a conversa ou peça para ajustar o plano')}</div>`
+    :`<div class="card as-empty">
+      <h2>Como posso te ajudar hoje, João?</h2>
+      <p class="muted" style="max-width:520px">Pergunte sobre as contas da família, peça ajuda para decidir ou conte um sonho. Quando for um objetivo, eu levo para o Plano financeiro.</p>
+      ${composer('Pergunte sobre suas finanças ou conte um objetivo')}
+      <div class="sugs">${[...Object.keys(ANS),GOAL_EX].map(q=>`<button class="opt" type="button" data-ask="${q}">${q}</button>`).join('')}</div>
+    </div>`;
+  return `<div class="page-head"><div><h1>Assistente financeiro</h1><p>Tira dúvidas, ajuda a decidir e monta o plano com todas as informações da família.</p></div></div>
+  ${lock(`<div class="as-layout">${side}${main}</div>`,'Assistente financeiro','Assine o Premium para conversar com o assistente. Ele usa suas contas, financiamentos, família e plano para indicar o melhor caminho.')}`;
+}
+
+/* ---------- PLANO ---------- */
+function vPlano(){
+  const atual=apos(AP.aporte,AP.alvo);
+  const idade=idadeQueAtinge(AP.aporte);
+  const sAtual=serieApos(AP.aporte), sMeta=serieApos(atual.aporteNec);
+  const labs=sAtual.map((_,i)=>String(AP.idade+i));
+  const patrimonio=contas[2].saldo+contas[3].saldo+AP.prev;
+  // casamento
+  const C={alvo:36000,guardado:9000,mensal:3000,prazo:'jun/2027'};
+  let cas;
+  if(S.casamento==='aumentar') cas={status:['No ritmo','pos'],mensal:27000/8,prazo:'jun/2027',nota:'Aportes ajustados para R$ 3.375,00 de novembro a junho.'};
+  else if(S.casamento==='adiar') cas={status:['No ritmo','pos'],mensal:3000,prazo:'jul/2027',nota:'Meta adiada em 1 mês, mantendo R$ 3.000,00 por mês.'};
+  else cas={status:['Em risco','warn'],mensal:3000,prazo:'jun/2027',nota:null};
+  const casChoice=S.casamento?`<p class="small muted">${cas.nota} <button class="link" data-act="cas-reset">Desfazer</button></p>`:`<div class="choice"><b>Outubro ficou sem aporte.</b><span class="small">Para casar em junho de 2027, escolha como recuperar:</span><div class="opts2">
+      <button type="button" data-act="cas-aumentar"><b>Aumentar os próximos aportes</b><span class="small muted">R$ 3.375,00 por mês, de novembro a junho</span></button>
+      <button type="button" data-act="cas-adiar"><b>Adiar o casamento em 1 mês</b><span class="small muted">Mantém R$ 3.000,00 por mês, meta em julho de 2027</span></button></div></div>`;
+  let ap;
+  const misto=apos(0,65).aporteNec;
+  if(S.aposentadoria==='misto') ap={status:['No ritmo','pos'],txt:`Aporte de ${R(misto)} por mês e aposentadoria aos 65 anos.`};
+  else if(S.aposentadoria==='aporte') ap={status:['No ritmo','pos'],txt:`Aporte ajustado para ${R(atual.aporteNec)} por mês.`};
+  else if(S.aposentadoria==='idade') ap={status:['No ritmo','pos'],txt:`Mantém ${R(AP.aporte)} por mês e se aposenta aos ${idade} anos.`};
+  else ap={status:['Abaixo da meta','warn'],txt:null};
+  const apChoice=S.aposentadoria?`<p class="small muted">${ap.txt} <button class="link" data-act="ap-reset">Desfazer</button></p>`:`<div class="choice"><b>No ritmo atual, a renda projetada aos 60 é de ${R0(atual.renda)} por mês.</b><span class="small">A meta é ${R0(AP.renda)}. Escolha como chegar lá:</span><div class="opts2">
+      <button type="button" data-act="ap-aporte"><b>Aumentar o aporte</b><span class="small muted">${R(atual.aporteNec)} por mês até os 60</span></button>
+      <button type="button" data-act="ap-idade"><b>Aposentar mais tarde</b><span class="small muted">Mantém ${R0(AP.aporte)} por mês e chega lá aos ${idade}</span></button>
+      <button type="button" data-act="ap-misto"><b>Um pouco de cada</b><span class="small muted">${R(misto)} por mês e aposentadoria aos 65</span></button></div></div>`;
+  const apAporte=S.aposentadoria==='aporte'?atual.aporteNec:S.aposentadoria==='misto'?misto:AP.aporte;
+  const off=S.off, paused=k=>`<p class="small muted">Pausado na conversa com o assistente. O que já foi guardado continua no plano. <button class="link" data-act="on-${k}">Reativar</button></p>`;
+  const chipP='<span class="chip right">Pausado</span>';
+  const gOn=S.goals.filter(g=>!g.off);
+  const aporteTot=(off.cas?0:cas.mensal)+(off.ap?0:apAporte)+gOn.reduce((a,g)=>a+g.aporte,0);
+  const ativos=['cas','ap','res'].filter(k=>!off[k]).length+gOn.length;
+  const atencao=(!off.cas&&cas.status[0]!=='No ritmo'?1:0)+(!off.ap&&ap.status[0]!=='No ritmo'?1:0)+gOn.filter(g=>g.fit[1]!=='pos').length;
+  const maxM=Math.max(...meses.flatMap(m=>[m[1],m[2]]));
+  const fluxo=`<div style="display:flex;align-items:flex-end;gap:14px;height:170px;padding-top:8px">${meses.map(m=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end"><div style="display:flex;gap:3px;align-items:flex-end;height:100%;width:100%;justify-content:center"><div title="Entradas ${R(m[1])}" style="width:38%;height:${m[1]/maxM*100}%;background:var(--pos);border-radius:4px 4px 0 0"></div><div title="Saídas ${R(m[2])}" style="width:38%;height:${m[2]/maxM*100}%;background:var(--muted);opacity:.55;border-radius:4px 4px 0 0"></div></div><span class="small muted">${m[0]}</span></div>`).join('')}</div>
+    <div class="legend"><span><i style="background:var(--pos)"></i>Entradas</span><span><i style="background:var(--muted)"></i>Saídas</span></div>`;
+  const inner=`<div style="display:flex;flex-direction:column;gap:16px">
+  ${S.planNote?`<div class="note"><span class="grow">${S.planNote} Confira abaixo se o plano está como vocês querem.</span><button class="link" type="button" data-act="note-x">Entendi</button></div>`:''}
+  <div class="grid g4">
+    <div class="card kpi"><span class="label">Patrimônio hoje</span><span class="val">${R(patrimonio)}</span><span class="sub">Poupança, investimentos e previdência</span></div>
+    <div class="card kpi"><span class="label">Aporte mensal combinado</span><span class="val">${R(aporteTot)}</span><span class="sub">Soma dos objetivos ativos</span></div>
+    <div class="card kpi"><span class="label">Objetivos ativos</span><span class="val">${ativos}</span><span class="sub">${atencao} ${atencao===1?'pede':'pedem'} atenção</span></div>
+    <div class="card kpi"><span class="label">Sobra em outubro</span><span class="val pos">${R(563.55)}</span><span class="sub">Depois dos gastos e dos aportes</span></div>
+  </div>
+  <div class="card"><div class="card-head"><h2>Crescimento do patrimônio para a aposentadoria</h2><span class="small muted right">idade de João · valores de hoje</span></div>
+    ${lineChart([{data:sMeta,color:'var(--pos)',dash:true},{data:sAtual,color:'var(--brand)',area:true}],labs,{every:2,w:1000,h:300,pl:80,fmt:v=>v>=1e6?'R$ '+P(v/1e6,1)+' mi':v>=1e3?'R$ '+P(v/1e3,0)+' mil':'R$ 0',aria:'Patrimônio projetado por idade'})}
+    <div class="legend"><span><i style="background:var(--brand)"></i>Ritmo atual: ${R0(AP.aporte)} por mês</span><span><i style="background:var(--pos)"></i>Ritmo para a meta: ${R0(atual.aporteNec)} por mês</span></div>
+    <p class="small muted">Hipótese: rentabilidade real de 4% ao ano, já descontada a inflação, definida com o assistente. Não é promessa de retorno.</p></div>
+  <div class="grid g2">
+    <div class="goal ${off.cas?'off':''}"><div class="goal-top"><div><h3>Casamento</h3><span class="small muted">${R0(C.alvo)} até ${cas.prazo}</span></div>${off.cas?chipP:`<span class="chip ${cas.status[1]} right">${cas.status[0]}</span>`}</div>
+      <div class="prog"><b style="width:${C.guardado/C.alvo*100}%"></b></div>
+      <div class="facts"><div><span class="muted">Guardado</span><b>${R0(C.guardado)}</b></div><div><span class="muted">Falta</span><b>${R0(C.alvo-C.guardado)}</b></div><div><span class="muted">Aporte</span><b>${R(cas.mensal)}</b></div><div><span class="muted">Aportes feitos</span><b>3 de 4</b></div></div>
+      ${off.cas?paused('cas'):casChoice}</div>
+    <div class="goal ${off.ap?'off':''}"><div class="goal-top"><div><h3>Aposentadoria aos 60</h3><span class="small muted">${R0(AP.renda)} por mês de renda, em valores de hoje</span></div>${off.ap?chipP:`<span class="chip ${ap.status[1]} right">${ap.status[0]}</span>`}</div>
+      <div class="prog"><b style="width:${Math.min(100,atual.proj/atual.need*100)}%"></b></div>
+      <div class="facts"><div><span class="muted">Precisa ter</span><b>${R0(atual.need)}</b></div><div><span class="muted">Projeção atual</span><b>${R0(atual.proj)}</b></div><div><span class="muted">Aporte</span><b>${R0(apAporte)}</b></div><div><span class="muted">Rentab. alvo</span><b>4% real a.a.</b></div></div>
+      ${off.ap?paused('ap'):apChoice}</div>
+    <div class="goal ${off.res?'off':''}"><div class="goal-top"><div><h3>Reserva de emergência</h3><span class="small muted">${R0(42000)}, 3 meses de despesas</span></div>${off.res?chipP:'<span class="chip right">Começa em jul/2027</span>'}</div>
+      <div class="prog"><b style="width:${6250/42000*100}%"></b></div>
+      <div class="facts"><div><span class="muted">Guardado</span><b>${R0(6250)}</b></div><div><span class="muted">Falta</span><b>${R0(35750)}</b></div><div><span class="muted">Aporte</span><b>${R0(3000)}</b></div><div><span class="muted">Previsão</span><b>jun/2028</b></div></div>
+      ${off.res?paused('res'):'<p class="small muted">Recebe o aporte do casamento quando ele terminar.</p>'}</div>
+    ${S.goals.map((g,gi)=>`<div class="goal ${g.off?'off':''}"><div class="goal-top"><div><h3>${g.nome}</h3><span class="small muted">${R0(g.valor)} em ${g.prazo} meses</span></div>${g.off?chipP:`<span class="chip ${g.fit[1]} right">${g.fit[1]==='pos'?'No ritmo':g.fit[0]}</span>`}</div><div class="prog"><b style="width:${g.guardado/g.valor*100}%"></b></div><div class="facts"><div><span class="muted">Guardado</span><b>${R0(g.guardado)}</b></div><div><span class="muted">Falta</span><b>${R0(g.valor-g.guardado)}</b></div><div><span class="muted">Aporte</span><b>${R(g.aporte)}</b></div><div><span class="muted">Criado</span><b>hoje</b></div></div>${g.off?`<p class="small muted">Pausado na conversa com o assistente. <button class="link" data-act="on-g" data-i="${gi}">Reativar</button></p>`:g.src?'<p class="small muted">Criado a partir da conversa com o assistente.</p>':''}</div>`).join('')}
+    <div class="card"><h2>Receitas e despesas</h2>${fluxo}</div>
+  </div></div>`;
+  return `<div class="page-head"><div><h1>Plano financeiro</h1><p>O plano que vocês montaram com o assistente e o acompanhamento de cada objetivo.</p></div>${S.premium?'<div class="right btn-row"><button class="btn sec" data-go="assistente">Ajustar com o assistente</button><button class="btn" data-act="ng-open">Novo objetivo</button></div>':''}</div>
+  ${S.premium&&S.ngOpen?vFunnel('objetivo'):''}
+  ${lock(inner,'Plano financeiro','Assine o Premium para montar seu plano com o assistente e acompanhar cada objetivo mês a mês.')}`;
+}
+
+/* ---------- CRÉDITO ---------- */
+function vCredito(){
+  const iV=0.0239, nV=21, parcV=1486.27, sdV=saldoDev(parcV,iV,nV);
+  const iN=0.0172, novaV=pmt(sdV,iN,nV);
+  const debts={
+    veiculo:{nome:'Financiamento do carro',inst:'Banco Alfa',det:`Contratado em mar/2024 · 48 parcelas · restam ${nV}`,taxa:2.39,bcb:1.95,mes:'março de 2024',saldo:sdV,parc:parcV,mod:'Financiamento de veículo, pessoa física'},
+    rotativo:{nome:'Rotativo do cartão',inst:'Banco Alfa',det:'Saldo financiado desde setembro de 2026',taxa:13.9,bcb:14.2,mes:'outubro de 2026',saldo:4120,parc:612.40,mod:'Cartão de crédito rotativo, pessoa física'},
+    pessoal:{nome:'Empréstimo pessoal',inst:'Banco Beta',det:'Contratado em jun/2025 · 24 parcelas · restam 8',taxa:5.9,bcb:3.4,mes:'junho de 2025',saldo:1610,parc:220,mod:'Crédito pessoal não consignado'}
+  };
+  const d=debts[S.debt], ratio=d.taxa/d.bcb;
+  const irregular=ratio>=1.5;
+  const totalSaldo=Object.values(debts).reduce((a,x)=>a+x.saldo,0);
+  const totalParc=Object.values(debts).reduce((a,x)=>a+x.parc,0);
+  let next='';
+  if(S.debt==='veiculo') next=`<div class="card" style="background:var(--surface-2)"><h3>Portabilidade: ofertas encontradas</h3>
+      <div class="tbl-box"><table><thead><tr><th>Banco</th><th class="num">Taxa</th><th class="num">Nova parcela</th><th class="num">Economia total</th></tr></thead><tbody>
+      <tr class="rec"><td><b>Banco Delta</b></td><td class="num">1,72% a.m.</td><td class="num">${R(novaV)}</td><td class="num pos">${R((parcV-novaV)*nV)}</td></tr>
+      <tr><td>Banco Épsilon</td><td class="num">1,89% a.m.</td><td class="num">${R(pmt(sdV,0.0189,nV))}</td><td class="num pos">${R((parcV-pmt(sdV,0.0189,nV))*nV)}</td></tr>
+      </tbody></table></div><div class="btn-row"><button class="btn" type="button" data-act="portab">Pedir a portabilidade</button><button class="btn sec" type="button" data-act="reneg">Tentar renegociar com o Banco Alfa</button></div></div>`;
+  else if(S.debt==='rotativo') next=`<div class="card" style="background:var(--surface-2)"><h3>Saída sugerida: trocar a dívida por uma mais barata</h3>
+      <p class="small">O rotativo está na média do mercado, mas é o crédito mais caro que existe. Trocar ${R0(4120)} por um crédito pessoal em 12x a 3,6% a.m. reduz os juros de cerca de R$ 600 para cerca de R$ 150 por mês no começo.</p>
+      <div class="btn-row"><button class="btn" type="button" data-go="marketplace" data-mkt="pessoal" data-pre="pessoal:fim=quitar,gar=sem,valor=4120,prazo=12">Ver crédito pessoal no Marketplace</button></div></div>`;
+  else next=`<div class="card" style="background:var(--neg-soft)"><h3>Indício de juros acima do mercado</h3>
+      <p class="small">A taxa contratada é ${P(ratio,2)} vezes a média do BCB para a modalidade no mês da contratação. Pelo critério usado nos tribunais, isso indica possível abusividade.</p>
+      <div class="btn-row"><button class="btn" type="button" data-act="juridico">Falar com um advogado parceiro</button><button class="btn sec" type="button" data-act="reneg">Tentar renegociar antes</button></div></div>`;
+  return `<div class="page-head"><div><h1>Crédito</h1><p>Analisamos seus contratos e seus créditos atuais em busca de um custo menor.</p></div></div>
+  <div class="grid g4">
+    <div class="card kpi"><span class="label">Dívidas ativas</span><span class="val">3</span><span class="sub">Lidas pelo Open Finance</span></div>
+    <div class="card kpi"><span class="label">Saldo devedor total</span><span class="val">${R(totalSaldo)}</span><span class="sub">Somando as três</span></div>
+    <div class="card kpi"><span class="label">Parcelas e juros por mês</span><span class="val">${R(totalParc)}</span><span class="sub">16% da renda da família</span></div>
+    <div class="card kpi"><span class="label">Economia possível</span><span class="val pos">${R((parcV-novaV)*nV)}</span><span class="sub">Com a portabilidade do carro</span></div>
+  </div>
+  <div class="grid g-main">
+    <div class="card"><div class="card-head"><h2>Análise: ${d.nome}</h2><span class="chip ${irregular?'neg':ratio>1.1?'warn':'pos'} right">${irregular?'Possível abusividade':ratio>1.1?'Acima da média':'Dentro da média'}</span></div>
+      <div class="steps">
+        <div class="step"><span class="n">1</span><div><b>Contrato lido</b><p class="small muted">${d.inst} · ${d.det}</p></div></div>
+        <div class="step"><span class="n">2</span><div><b>Modalidade identificada</b><p class="small muted">${d.mod}</p></div></div>
+        <div class="step"><span class="n">3</span><div><b>Comparação com a média do BCB em ${d.mes}</b>
+          <div class="compare" style="margin-top:10px"><div><div class="big">${P(d.taxa,2)}%</div><span class="small muted">sua taxa ao mês</span></div><div class="small muted">${P(ratio,2)}x</div><div><div class="big">${P(d.bcb,2)}%</div><span class="small muted">média do BCB ao mês</span></div></div>
+          <p class="small muted" style="margin-top:8px">No produto real, a média vem da série oficial do BCB do mês da contratação. Neste protótipo, o valor é de exemplo.</p></div></div>
+        <div class="step"><span class="n">4</span><div><b>Próximo passo</b><p class="small muted">${irregular?'Caminho jurídico, com advogado parceiro.':S.debt==='veiculo'?'Sem indício de abusividade. Buscamos uma taxa menor em outros bancos (portabilidade) ou renegociamos com o seu banco.':'Taxa na média, mas cara. A melhor saída é trocar a dívida.'}</p></div></div>
+      </div>
+      ${next}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card"><h2>Seus créditos</h2>
+        ${Object.entries(debts).map(([k,x])=>`<button class="debt" type="button" data-debt="${k}" aria-pressed="${S.debt===k}"><span style="display:flex;gap:8px;width:100%"><b class="grow">${x.nome}</b><span class="chip ${x.taxa/x.bcb>=1.5?'neg':x.taxa/x.bcb>1.1?'warn':'pos'}">${P(x.taxa/x.bcb,2)}x</span></span><span class="small muted">${x.inst} · ${P(x.taxa,2)}% a.m. · saldo ${R0(x.saldo)}</span></button>`).join('')}
+      </div>
+      <div class="card"><h2>Tem outro contrato?</h2><div class="drop">Envie o contrato em PDF ou foto. Analisamos consignado, cartão benefício, RCC, veículo, imóvel e crédito pessoal.</div><button class="btn sec" type="button" data-act="upload">Enviar contrato</button></div>
+      ${S.premium?'':`<div class="card" style="background:var(--brand-soft);border-color:transparent"><h3>Monte com o assistente um plano para sair das dívidas</h3><p class="small">No Premium, o assistente organiza a ordem de quitação e acompanha cada mês.</p><button class="btn" type="button" data-act="assinar">Assinar o Premium</button></div>`}
+    </div>
+  </div>`;
+}
+
+/* ---------- MARKETPLACE: funis por produto ---------- */
+const RENDA=14800, COMPROMETIDO=2318.67;
+const pct=v=>P(v,2)+'%';
+const ADMS=['Administradora Delta','Administradora Beta','Administradora Alfa','Administradora Gama'];
+const CONS_MOD={
+  veiculo:{l:'Veículo leve',sub:'Carro novo ou usado',prz:[80,72,60,60],adm:[11,12,14,17],lance:[52,45,38,22],sug:[50000,80000,120000]},
+  moto:{l:'Moto',sub:'Nova ou usada',prz:[60,50,48,36],adm:[14,15,16,19],lance:[48,40,30,18],sug:[15000,25000,40000]},
+  pesado:{l:'Caminhão, ônibus ou utilitário',sub:'Uso profissional',prz:[100,96,90,80],adm:[10,11,12,14],lance:[50,42,35,25],sug:[250000,400000,600000]},
+  imovel:{l:'Imóvel',sub:'Casa ou apartamento, novo ou usado',prz:[220,200,180,150],adm:[15,17,18,22],lance:[55,46,38,28],sug:[250000,400000,600000]},
+  terreno:{l:'Terreno ou construção',sub:'Compra de lote ou obra',prz:[200,180,180,150],adm:[16,17,19,21],lance:[50,44,36,26],sug:[120000,200000,300000]},
+  maquinas:{l:'Máquinas e equipamentos',sub:'Agrícolas, industriais ou de construção',prz:[100,90,80,60],adm:[10,12,13,15],lance:[45,40,32,20],sug:[150000,300000,500000]},
+  servicos:{l:'Serviços',sub:'Reforma, festa, viagem, estudos ou cirurgia',prz:[40,36,30,24],adm:[16,18,20,22],lance:[40,35,28,15],sug:[15000,30000,50000]}
+};
+const FIN_T={
+  veic_novo:{l:'Veículo novo',tx:[1.55,1.69,1.79,1.99],add:.24,ent:[0,20,30,50],prz:[24,36,48,60],sug:[60000,90000,130000],imo:false},
+  veic_usado:{l:'Veículo usado',tx:[1.82,1.95,2.10,2.35],add:.24,ent:[0,20,30,50],prz:[24,36,48,60],sug:[40000,60000,90000],imo:false},
+  moto:{l:'Moto',tx:[1.9,2.1,2.3,2.6],add:.24,ent:[0,20,30,50],prz:[12,24,36,48],sug:[15000,25000,40000],imo:false},
+  imovel:{l:'Imóvel residencial',tx:[.86,.91,.95,1.02],add:.07,ent:[20,30,40],prz:[240,360,420],sug:[300000,450000,700000],imo:true},
+  comercial:{l:'Imóvel comercial',tx:[1.05,1.12,1.2,1.3],add:.07,ent:[30,40,50],prz:[120,180,240],sug:[300000,500000,800000],imo:true},
+  terreno:{l:'Terreno',tx:[1.12,1.2,1.32,1.45],add:.07,ent:[30,40,50],prz:[60,120,180],sug:[100000,180000,300000],imo:true}
+};
+const BANKS=['Banco Delta','Banco Alfa','Banco Épsilon','Financeira Ômega'];
+const opt=(v,l,sub)=>({v,l,sub});
+const mny=(id,q,sug,help)=>({id,q,type:'money',sug,help});
+const FUN={
+  consorcio:{nome:'Consórcio',
+    pre:()=>({mod:'veiculo',valor:65000,quando:'medio',lance:'nao'}),
+    steps:[
+      {id:'mod',q:'Qual é o bem ou serviço?',type:'choice',opts:a=>Object.entries(CONS_MOD).map(([k,m])=>opt(k,m.l,m.sub))},
+      {id:'valor',q:'Qual o valor da carta de crédito?',type:'money',sug:a=>CONS_MOD[a.mod].sug,help:'É o valor do bem ou serviço que você quer comprar.'},
+      {id:'quando',q:'Quando você precisa do bem?',type:'choice',opts:()=>[opt('agora','Logo, em até 6 meses','Vai depender de lance'),opt('medio','Entre 6 meses e 2 anos'),opt('sem','Não tenho pressa','Posso esperar o sorteio')]},
+      {id:'lance',q:'Pretende dar lance?',type:'choice',opts:()=>[opt('nao','Não pretendo dar lance'),opt('embutido','Lance embutido','Usa até 25% da própria carta'),opt('ate30','Com recursos próprios, até 30% da carta'),opt('mais30','Com recursos próprios, acima de 30%')]}
+    ],
+    res:a=>{
+      const m=CONS_MOD[a.mod], fr=a.mod==='servicos'?3:2, cap={nao:0,embutido:25,ate30:30,mais30:60}[a.lance];
+      const g=m.adm.map((ad,i)=>({n:ADMS[i]+' · grupo '+(1042+i*731),prz:m.prz[i],ad,lance:m.lance[i],parc:a.valor*(1+(ad+fr)/100)/m.prz[i],tot:a.valor*(1+(ad+fr)/100)}));
+      let rec=0, why=[];
+      if(cap===0 && a.quando==='agora'){rec=g.reduce((b,x,i)=>x.lance<g[b].lance?i:b,0);why.push('Sem lance, a contemplação depende de sorteio e pode levar anos. Para quem precisa do bem em até 6 meses, vale comparar com o financiamento.');why.push(g[rec].n+' tem o menor lance médio ('+g[rec].lance+'%), o que dá mais chance caso decida ofertar um lance depois.');}
+      else if(cap===0||a.quando==='sem'){rec=0;why.push('Como você '+(cap===0?'não pretende dar lance':'não tem pressa')+', o que mais pesa é o custo: '+g[0].n+' tem a menor taxa de administração ('+g[0].ad+'%) e o menor custo total, '+R0(g[0].tot)+'.');why.push('Em troca, o grupo exige lances maiores ('+g[0].lance+'% em média), o que não importa para quem espera o sorteio.');}
+      else{const el=g.map((x,i)=>i).filter(i=>g[i].lance<=cap);rec=el.length?el[0]:g.length-1;why.push(el.length?'Com lance de até '+cap+'%, você tem chance real de contemplação em '+el.length+' dos '+g.length+' grupos. Entre eles, '+g[rec].n+' tem o menor custo total.':'Nenhum grupo tem lance médio dentro do que você pode ofertar. '+g[rec].n+' é o que exige o menor lance.');why.push('O lance médio é dos últimos 6 meses do grupo. Não é garantia de contemplação.');}
+      if(S.premium&&a.mod==='veiculo') why.push('A parcela de '+R(g[rec].parc)+' cabe no orçamento de vocês depois que o aporte do casamento terminar, em julho de 2027.');
+      return {sub:'Carta de '+R0(a.valor)+' · '+m.l,cols:['Administradora e grupo','Prazo','Taxa de adm. total','Fundo de reserva','Parcela','Custo total','Lance médio'],
+        rows:g.map(x=>[x.n,x.prz+' meses',x.ad+'%',fr+'%',R(x.parc),R0(x.tot),x.lance+'%']),rec,why,
+        extra:(cap===0&&a.quando==='agora')?`<button class="btn sec" type="button" data-mkt="financiamento">Comparar com financiamento</button>`:''};
+    }},
+  financiamento:{nome:'Financiamento',
+    pre:()=>({tipo:'veic_novo',valor:80000,entrada:20,prazo:48}),
+    steps:[
+      {id:'tipo',q:'O que você quer financiar?',type:'choice',opts:()=>Object.entries(FIN_T).map(([k,t])=>opt(k,t.l))},
+      {id:'valor',q:'Qual o valor do bem?',type:'money',sug:a=>FIN_T[a.tipo].sug},
+      {id:'entrada',q:'Quanto você tem de entrada?',type:'choice',opts:a=>FIN_T[a.tipo].ent.map(p=>opt(p,p?p+'% do valor':'Sem entrada',R0(a.valor*p/100)))},
+      {id:'fgts',q:'Vai usar o FGTS?',type:'choice',when:a=>a.tipo==='imovel',opts:()=>[opt('sim','Sim','Na entrada ou para amortizar'),opt('nao','Não')]},
+      {id:'sistema',q:'Qual sistema de amortização prefere?',type:'choice',when:a=>!!a.tipo&&FIN_T[a.tipo].imo,opts:()=>[opt('SAC','SAC','Parcela começa maior e cai todo mês. Paga menos juros no total'),opt('Price','Price','Parcela fixa. Paga mais juros no total')]},
+      {id:'prazo',q:'Em quanto tempo quer pagar?',type:'choice',opts:a=>FIN_T[a.tipo].prz.map(n=>opt(n,n+' meses',n>=120?(n/12)+' anos':''))}
+    ],
+    res:a=>{
+      const t=FIN_T[a.tipo], pv=a.valor*(1-a.entrada/100), n=a.prazo, sac=a.sistema==='SAC';
+      const banks=t.imo?['Banco Delta','Banco Alfa','Banco Épsilon','Banco Sigma']:BANKS;
+      const rows=t.tx.map((tx,i)=>{const c=(tx+t.add)/100;const p1=sac?pv/n+pv*c:pmt(pv,c,n);const tot=sac?pv+c*pv*(n+1)/2:pmt(pv,c,n)*n;return {b:banks[i],tx,cet:tx+t.add,p1,tot}});
+      const why=['Indicamos pelo CET, que soma juros, tarifas, seguros obrigatórios e IOF. '+rows[0].b+' tem o menor: '+pct(rows[0].cet)+' ao mês.'];
+      if(t.imo) why.push(sac?'No SAC, a primeira parcela é a maior. Ela cai cerca de '+R0(pv/n*rows[0].cet/100)+' por mês até o fim.':'No Price, a parcela é fixa, mas o custo total é maior que no SAC.');
+      if(a.fgts==='sim') why.push('O FGTS pode entrar na entrada ou ser usado para amortizar o saldo a cada 2 anos.');
+      if(S.premium){const rc=(COMPROMETIDO+rows[0].p1)/RENDA*100;why.push('Com essa parcela, '+P(rc,0)+'% da renda de vocês ficaria comprometida com dívidas'+(rc>30?', acima dos 30% que recomendamos.':'.'));}
+      return {sub:t.l+' de '+R0(a.valor)+' · financiando '+R0(pv)+' em '+n+' meses'+(t.imo?' · '+a.sistema:''),
+        cols:['Instituição','Taxa ao mês','CET ao mês',sac?'1ª parcela':'Parcela','Custo total'],rows:rows.map(r=>[r.b,pct(r.tx),pct(r.cet),R(r.p1),R0(r.tot)]),rec:0,why,
+        extra:!t.imo?`<button class="btn sec" type="button" data-mkt="consorcio">Comparar com consórcio</button>`:''};
+    }},
+  pessoal:{nome:'Crédito pessoal',
+    pre:()=>({fim:'quitar',gar:'sem',valor:4120,prazo:12}),
+    steps:[
+      {id:'fim',q:'Para que é o dinheiro?',type:'choice',opts:()=>[opt('quitar','Quitar uma dívida mais cara','Rotativo, cheque especial ou outro empréstimo'),opt('reforma','Reforma ou compra'),opt('emergencia','Emergência'),opt('negocio','Investir no próprio negócio'),opt('outro','Outro')]},
+      {id:'gar',q:'Que tipo de crédito você pode usar?',type:'choice',opts:()=>[opt('sem','Sem garantia','Mais rápido e mais caro'),opt('consig','Consignado','Desconto em folha. Para CLT, servidor público, aposentado ou pensionista do INSS'),opt('veiculo','Com garantia de veículo quitado','O veículo fica alienado até o fim'),opt('imovel','Com garantia de imóvel quitado','Menor taxa. O imóvel fica alienado até o fim')]},
+      {id:'valor',q:'De quanto você precisa?',type:'money',sug:()=>[5000,15000,50000]},
+      {id:'prazo',q:'Em quantos meses quer pagar?',type:'choice',opts:a=>(a.gar==='imovel'?[24,60,120,180]:a.gar==='veiculo'?[12,24,36,48]:[6,12,24,36]).map(n=>opt(n,n+' meses'))}
+    ],
+    res:a=>{
+      const tx={sem:[3.6,4.2,5.1,6.4],consig:[1.85,2.2,2.6,2.95],veiculo:[1.79,1.99,2.29,2.6],imovel:[1.09,1.25,1.39,1.55]}[a.gar], add=a.gar==='sem'?.3:.15;
+      const rows=tx.map((t,i)=>{const c=(t+add)/100;return {b:BANKS[i],t,cet:t+add,p:pmt(a.valor,c,a.prazo)}});
+      const why=['Indicamos pelo CET: '+rows[0].b+' cobra '+pct(rows[0].cet)+' ao mês, com parcela de '+R(rows[0].p)+'.'];
+      if(a.gar==='consig') why.push('No consignado do INSS, a taxa tem teto definido pelo CNPS. A parcela não pode passar da margem consignável.');
+      if(a.gar==='imovel') why.push('A garantia de imóvel dá a menor taxa, mas o imóvel fica alienado ao banco até a quitação.');
+      if(a.fim==='quitar'){ if(S.premium){const pr=pmt(a.valor,0.139,a.prazo);why.push('O rotativo do cartão Alfa custa 13,9% ao mês. Trocar a dívida economiza cerca de '+R0((pr-rows[0].p)*a.prazo)+' no prazo escolhido.');} else why.push('Só vale a troca se a nova taxa for menor que a da dívida atual. A aba Crédito mostra a taxa de cada dívida sua.'); }
+      if(S.premium&&a.gar==='veiculo') why.push('O carro de vocês ainda está financiado, então não pode ser dado como garantia agora.');
+      return {sub:R0(a.valor)+' em '+a.prazo+' meses · '+{sem:'sem garantia',consig:'consignado',veiculo:'garantia de veículo',imovel:'garantia de imóvel'}[a.gar],
+        cols:['Instituição','Taxa ao mês','CET ao mês','Parcela','Custo total'],rows:rows.map(r=>[r.b,pct(r.t),pct(r.cet),R(r.p),R0(r.p*a.prazo)]),rec:0,why};
+    }},
+  cartao:{nome:'Cartão de crédito',
+    pre:()=>({gasto:'5a10',prior:'cashback',viagem:'nao'}),
+    steps:[
+      {id:'gasto',q:'Quanto você gasta no cartão por mês?',type:'choice',opts:()=>[opt('ate2','Até R$ 2.000'),opt('2a5','De R$ 2.000 a R$ 5.000'),opt('5a10','De R$ 5.000 a R$ 10.000'),opt('mais10','Mais de R$ 10.000')]},
+      {id:'prior',q:'O que é mais importante para você?',type:'choice',opts:()=>[opt('anuidade','Não pagar anuidade'),opt('cashback','Dinheiro de volta na fatura'),opt('milhas','Milhas para viajar'),opt('limite','Limite alto')]},
+      {id:'viagem',q:'Você viaja para fora do Brasil?',type:'choice',opts:()=>[opt('sim','Sim, pelo menos uma vez por ano'),opt('nao','Não costumo')]}
+    ],
+    res:a=>{
+      const g={ate2:1500,'2a5':3500,'5a10':7500,mais10:15000}[a.gasto]*12;
+      const C=[{n:'Cartão Épsilon',an:0,is:0,cb:1,mi:0,lim:'Até R$ 15 mil',sala:'Não'},{n:'Banco Alfa Essencial',an:0,is:0,cb:0,mi:0,lim:'Até R$ 10 mil',sala:'Não'},{n:'Banco Delta Cashback',an:240,is:3000,cb:1.5,mi:0,lim:'Até R$ 30 mil',sala:'Não'},{n:'Banco Beta Platinum',an:480,is:5000,cb:0,mi:1.6,lim:'Até R$ 50 mil',sala:'2 por ano'},{n:'Cartão Ômega Black',an:1200,is:10000,cb:0,mi:2.5,lim:'Acima de R$ 50 mil',sala:'Ilimitada'}];
+      C.forEach(c=>{c.anu=g/12>=c.is&&c.is?0:c.an;c.ben=g*c.cb/100+g/5.6*c.mi*0.02;c.net=c.ben-c.anu});
+      const score=c=>a.prior==='anuidade'?(c.an===0?1e6:0)+c.net:a.prior==='cashback'?(c.cb?1e6:0)+c.net:a.prior==='milhas'?(c.mi?1e6:0)+c.net+(a.viagem==='sim'&&c.sala!=='Não'?300:0):(c.lim.startsWith('Acima')?2e6:c.lim.includes('50')?1e6:0)+c.net;
+      const sorted=[...C].sort((x,y)=>y.net-x.net); const best=[...C].sort((x,y)=>score(y)-score(x))[0]; const rec=sorted.indexOf(best);
+      const why=['Com gastos de cerca de '+R0(g/12)+' por mês, o '+best.n+' devolve cerca de '+R0(best.ben)+' por ano'+(best.anu?' e cobra '+R0(best.anu)+' de anuidade.':' e não cobra anuidade.')];
+      if(a.viagem==='sim') why.push('Para viagens, cartões com milhas e sala VIP ganham valor. As compras no exterior pagam IOF em qualquer cartão.');
+      if(a.prior==='milhas'&&a.viagem==='nao') why.push('Como você não viaja para fora, as milhas valem menos. Considere o dinheiro de volta.');
+      return {sub:'Gasto de cerca de '+R0(g/12)+' por mês',cols:['Cartão','Anuidade para você','Benefício','Valor por ano para você','Limite','Sala VIP'],
+        rows:sorted.map(c=>[c.n,c.anu?R0(c.anu):'Grátis',c.cb?c.cb+'% de volta':c.mi?c.mi+' pontos por dólar':'Sem benefício',(c.net>=0?'':'-')+R0(Math.abs(c.net)),c.lim,c.sala]),rec,why};
+    }},
+  vida:{nome:'Seguro de vida',
+    pre:()=>({quem:'casal',tipo:'temp',capital:'calc',prazo:20,cob:'inv'}),
+    steps:[
+      {id:'quem',q:'Para quem é o seguro?',type:'choice',opts:()=>[opt('eu','Só para mim'),opt('casal','Para mim e meu cônjuge')]},
+      {id:'tipo',q:'Que tipo de seguro você quer?',type:'choice',opts:()=>[opt('temp','Temporário, a fundo perdido','Mais barato. Se não usar no prazo, não recebe nada de volta'),opt('resg','Resgatável','Mais caro. Parte do que paga fica guardada e pode ser resgatada')]},
+      {id:'capital',q:'Qual valor a família deve receber?',type:'choice',opts:()=>[opt(250000,'R$ 250 mil'),opt(500000,'R$ 500 mil'),opt(1000000,'R$ 1 milhão'),opt('calc','Calcular para mim',S.premium?'Usamos a renda e os filhos de vocês':'Usamos a renda informada')]},
+      {id:'prazo',q:'Por quanto tempo?',type:'choice',opts:a=>a.tipo==='temp'?[opt(10,'10 anos'),opt(20,'20 anos'),opt(65,'Até os 65 anos')]:[opt(20,'20 anos'),opt('vida','Vida inteira')]},
+      {id:'cob',q:'Quais coberturas?',type:'choice',opts:()=>[opt('morte','Só morte'),opt('inv','Morte e invalidez'),opt('dg','Morte, invalidez e doenças graves'),opt('dit','Inclui diária por incapacidade temporária','Paga por dia parado, se ficar sem trabalhar')]}
+    ],
+    res:a=>{
+      const cap=a.capital==='calc'?(S.premium?900000:500000):a.capital;
+      const base=a.tipo==='temp'?6.2*({10:.8,20:1,65:1.2}[a.prazo]):(a.prazo==='vida'?41:34);
+      const mult={morte:1,inv:1.35,dg:1.9,dit:2.2}[a.cob]*(a.quem==='casal'?1.85:1);
+      const ins=[['Seguradora Zeta',.92,'Nenhuma'],['Seguradora Lambda',1,'Nenhuma'],['Seguradora Alfa',1.06,'Nenhuma'],['Seguradora Kappa',1.12,'90 dias']];
+      const rows=ins.map(s=>{const pm=cap/1e5*base*mult*s[1];return [s[0],R(pm),{morte:'Morte',inv:'Morte e invalidez',dg:'Morte, invalidez e doenças graves',dit:'Morte, invalidez e diária'}[a.cob],s[2]].concat(a.tipo==='resg'?[R0(pm*12*20*0.55)]:[])});
+      const why=[a.tipo==='temp'?'No temporário, você paga menos e protege a família pelo prazo escolhido. Se nada acontecer, o dinheiro não volta. É o mais indicado quando o objetivo é proteger os filhos até ficarem independentes.':'No resgatável, parte do prêmio é guardada. Custa bem mais, mas você pode resgatar um valor no futuro. Compare com fazer um temporário e investir a diferença.'];
+      why.push('A Seguradora Zeta tem o menor prêmio para as mesmas coberturas e não tem carência.');
+      if(a.capital==='calc') why.push(S.premium?'Capital de R$ 900 mil, cerca de 5 anos da renda da família, pensando no Pedro até a faculdade.':'Usamos R$ 500 mil como referência. No Premium, o cálculo considera o orçamento e os filhos.');
+      return {sub:'Capital de '+R0(cap)+' · '+(a.quem==='casal'?'casal':'titular')+' · '+(a.prazo==='vida'?'vida inteira':a.prazo===65?'até os 65 anos':a.prazo+' anos'),
+        cols:['Seguradora','Prêmio mensal','Coberturas','Carência'].concat(a.tipo==='resg'?['Resgate estimado em 20 anos']:[]),rows,rec:0,why};
+    }},
+  auto:{nome:'Seguro do carro',
+    steps:[
+      {id:'modelo',q:'Qual é o seu carro?',type:'text',ph:'Marca, modelo e versão',when:()=>!S.car,help:'Só pedimos os dados do carro na primeira vez. Depois eles ficam salvos.'},
+      {id:'ano',q:'Qual o ano do modelo?',type:'choice',when:()=>!S.car,opts:()=>[opt('2024','2024 a 2026'),opt('2020','2020 a 2023'),opt('2015','2015 a 2019'),opt('ant','Antes de 2015')]},
+      {id:'cep',q:'Qual o CEP onde o carro dorme?',type:'text',ph:'00000-000',when:()=>!S.car},
+      {id:'uso',q:'Como o carro é usado?',type:'choice',when:()=>!S.car,opts:()=>[opt('part','Uso particular'),opt('trab','Para ir ao trabalho e visitas'),opt('app','Motorista de aplicativo')]},
+      {id:'gar',q:'Onde ele fica guardado?',type:'choice',when:()=>!S.car,opts:()=>[opt('ambos','Garagem em casa e no trabalho'),opt('casa','Garagem só em casa'),opt('rua','Na rua')]},
+      {id:'idade',q:'Idade do condutor principal',type:'choice',when:()=>!S.car,opts:()=>[opt('18','18 a 25 anos'),opt('26','26 a 35 anos'),opt('36','36 a 55 anos'),opt('56','56 anos ou mais')]},
+      {id:'bonus',q:'Você já tem seguro com bônus?',type:'choice',when:()=>!S.car,opts:()=>[opt('0','É o primeiro seguro'),opt('1','Bônus de 1 a 4 anos'),opt('5','Bônus de 5 anos ou mais')]},
+      {id:'cob',q:'Que cobertura você quer?',type:'choice',opts:()=>[opt('comp','Completa','Colisão, roubo, incêndio e terceiros'),opt('roubo','Roubo e incêndio'),opt('terc','Só danos a terceiros')]},
+      {id:'franq',q:'Que franquia prefere?',type:'choice',when:a=>a.cob==='comp',opts:()=>[opt('red','Reduzida','Prêmio mais caro, paga menos se bater'),opt('norm','Normal'),opt('maj','Majorada','Prêmio mais barato, paga mais se bater')]}
+    ],
+    onDone:a=>{if(!S.car) S.car={modelo:a.modelo,ano:a.ano,cep:a.cep,uso:a.uso,gar:a.gar,idade:a.idade,bonus:a.bonus}},
+    res:a=>{
+      const c=S.car||a;
+      let base=2800*({'2024':1.15,'2020':1,'2015':.85,ant:.7}[c.ano])*({part:1,trab:1.12,app:1.45}[c.uso])*({ambos:.9,casa:1,rua:1.25}[c.gar])*({'18':1.6,'26':1.05,'36':.95,'56':1.05}[c.idade])*({'0':1,'1':.85,'5':.7}[c.bonus])*({comp:1,roubo:.45,terc:.3}[a.cob]);
+      const fm={red:1.18,norm:1,maj:.86}[a.franq||'norm'], fv={red:.6,norm:1,maj:1.5}[a.franq||'norm'];
+      if(a.cob==='comp') base*=fm;
+      const ins=[['Seguradora Lambda',.93,7,'200 km'],['Seguradora Zeta',1,15,'400 km'],['Seguradora Kappa',1.05,15,'500 km'],['Seguradora Alfa',1.12,30,'Ilimitado']];
+      const prof=c.uso!=='part', rec=prof?1:0;
+      const rows=ins.map(s=>[s[0],R0(base*s[1]),a.cob==='comp'?R0(3200*fv*s[1]):'Não se aplica',s[2]+' dias','Guincho '+s[3]]);
+      const why=[prof?'Como o carro é usado para trabalhar, 15 dias de carro reserva fazem diferença. A Seguradora Zeta custa '+R0(base*.07)+' a mais por ano que a Lambda e dá o dobro de dias.':'Para uso particular, a Seguradora Lambda tem o menor prêmio com as coberturas que você escolheu.'];
+      if(a.cob==='comp'&&a.franq==='maj'&&S.premium) why.push('Com a reserva de emergência baixa, a franquia majorada pode pesar se houver uma batida. Avalie a normal.');
+      return {sub:(c.modelo||'Seu carro')+' · '+{'2024':'2024 a 2026','2020':'2020 a 2023','2015':'2015 a 2019',ant:'antes de 2015'}[c.ano]+' · CEP '+(c.cep||'não informado'),
+        cols:['Seguradora','Prêmio anual','Franquia','Carro reserva','Assistência'],rows,rec,why,
+        extra:`<button class="btn sec" type="button" data-act="editcar">Editar dados do carro</button>`};
+    }},
+  previdencia:{nome:'Previdência',
+    pre:()=>({obj:'apos',ir:'simplificada',horiz:'longo',perfil:'mod',aporte:1200}),
+    steps:[
+      {id:'obj',q:'Qual é o objetivo?',type:'choice',opts:()=>[opt('apos','Aposentadoria'),opt('edu','Estudos dos filhos'),opt('suc','Sucessão e proteção da família','Costuma ficar fora do inventário')]},
+      {id:'ir',q:'Como você declara o Imposto de Renda?',type:'choice',opts:()=>[opt('completa','Declaração completa'),opt('simplificada','Declaração simplificada'),opt('isento','Sou isento')]},
+      {id:'horiz',q:'Por quanto tempo o dinheiro vai ficar aplicado?',type:'choice',opts:()=>[opt('curto','Menos de 10 anos'),opt('longo','10 anos ou mais')]},
+      {id:'perfil',q:'Qual o seu perfil de risco?',type:'choice',opts:()=>[opt('cons','Conservador','Prefiro não ver o saldo cair'),opt('mod','Moderado','Aceito algumas oscilações'),opt('arr','Arrojado','Aceito oscilar mais para tentar ganhar mais')]},
+      mny('aporte','Quanto pretende aplicar por mês?',()=>[500,1200,2000])
+    ],
+    res:a=>{
+      const tipo=a.ir==='completa'?'PGBL':'VGBL', tab=a.horiz==='longo'?'Regressiva':'Progressiva';
+      const F={cons:[['Plano Ômega Renda Fixa',.6,0],['Plano Alfa Conservador',1,0],['Plano Beta RF Crédito',1.3,1]],mod:[['Plano Alfa Moderado',1.1,0],['Plano Delta Balanceado',1.5,0],['Plano Beta Multimercado',2,1]],arr:[['Plano Delta Ações',1.4,0],['Plano Gama Arrojado',1.9,0],['Plano Beta Ações Globais',2.2,1]]}[a.perfil];
+      const why=[a.ir==='completa'?'Você faz a declaração completa, então o PGBL permite deduzir até 12% da renda tributável no IR.':'Sem a declaração completa, o PGBL não traz benefício fiscal. O VGBL é o tipo certo para você.',
+        a.horiz==='longo'?'Na tabela regressiva, o imposto cai até 10% para o dinheiro que fica mais de 10 anos.':'Para menos de 10 anos, a tabela progressiva costuma ser melhor.',
+        F[0][0]+' tem a menor taxa de administração do perfil e não cobra carregamento.'];
+      if(a.obj==='suc') why.push('A previdência costuma ficar fora do inventário, o que agiliza o acesso da família ao dinheiro.');
+      return {sub:tipo+' · tabela '+tab+' · '+R0(a.aporte)+' por mês',cols:['Plano','Tipo','Taxa de adm. ao ano','Carregamento','Custo por ano em 10 anos'],
+        rows:F.map(f=>[f[0],tipo,P(f[1],2)+'%',f[2]?f[2]+'%':'Zero',R0(a.aporte*12*10*f[1]/100+a.aporte*12*f[2]/100)]),rec:0,why};
+    }},
+  cambio:{nome:'Câmbio',
+    steps:[
+      {id:'op',q:'O que você quer fazer?',type:'choice',opts:()=>[opt('esp','Comprar moeda em espécie'),opt('cart','Cartão pré-pago ou conta global'),opt('env','Enviar dinheiro para o exterior'),opt('rec','Receber dinheiro do exterior')]},
+      {id:'moeda',q:'Qual moeda?',type:'choice',opts:()=>[opt('USD','Dólar americano'),opt('EUR','Euro'),opt('GBP','Libra esterlina')]},
+      {id:'valor',q:'Quanto na moeda estrangeira?',type:'money',raw:true,sug:()=>[500,1000,3000]}
+    ],
+    res:a=>{
+      const com={USD:5.52,EUR:6.40,GBP:7.35}[a.moeda], iof=a.op==='rec'?.38:3.5;
+      const P2=[['Conta Global Psi',{esp:null,cart:.9,env:1.1,rec:.8},0],['Câmbio Teta',{esp:1.6,cart:2.2,env:1.8,rec:1.5},0],['Câmbio Iota',{esp:2.1,cart:2.6,env:2.2,rec:1.9},15],['Banco Alfa',{esp:3.4,cart:3.9,env:3.5,rec:3},45]];
+      const rows=P2.filter(p=>p[1][a.op]!=null).map(p=>{const cot=com*(1+(a.op==='rec'?-1:1)*p[1][a.op]/100);const v=a.valor*cot;const vet=a.op==='rec'?v*(1-iof/100)-p[2]:v*(1+iof/100)+p[2];return [p[0],'R$ '+P(cot,4),iof+'%',p[2]?R(p[2]):'Grátis',R(vet)]});
+      rows.sort((x,y)=>{const n=s=>Number(s.replace(/[^\d,]/g,'').replace(',','.'));return a.op==='rec'?n(y[4])-n(x[4]):n(x[4])-n(y[4])});
+      return {sub:(a.op==='rec'?'Receber ':'')+a.valor.toLocaleString('pt-BR')+' '+a.moeda,cols:['Instituição','Cotação','IOF','Tarifa',a.op==='rec'?'Você recebe':'Valor efetivo total'],rows,rec:0,
+        why:['Indicamos pelo valor efetivo total, que soma cotação, tarifas e IOF. '+rows[0][0]+' é '+(a.op==='rec'?'onde você recebe mais':'a mais barata')+'.','O IOF é de exemplo neste protótipo.']};
+    }},
+  conta:{nome:'Conta bancária',
+    steps:[
+      {id:'uso',q:'Do que você precisa na conta?',type:'choice',opts:()=>[opt('dig','Só Pix, cartão de débito e app'),opt('ag','Preciso de agência física'),opt('conj','Conta conjunta do casal')]}
+    ],
+    res:a=>({sub:{dig:'Conta digital',ag:'Conta com agência',conj:'Conta conjunta'}[a.uso],cols:['Instituição','Tarifa mensal','Agência física','Conta conjunta','Saques grátis por mês'],
+      rows:[['Banco Delta Digital','Grátis','Não','Sim','4'],['Banco Épsilon','Grátis','Não','Não','2'],['Banco Alfa Serviços Essenciais','Grátis','Sim','Sim','4'],['Banco Alfa Pacote Plus','R$ 42,90','Sim','Sim','Ilimitados']],
+      rec:a.uso==='ag'?2:0,why:[a.uso==='ag'?'Todo banco é obrigado pelo BCB a oferecer um pacote de serviços essenciais sem tarifa. No Banco Alfa, isso dá para trocar o pacote atual sem mudar de banco.':'Uma conta digital sem tarifa resolve Pix, débito e app, e permite conta conjunta.',S.premium?'Vocês pagam R$ 42,90 por mês no pacote do Banco Alfa, R$ 514,80 por ano.':'Compare a tarifa com o que você paga hoje.']})}
+};
+
+function fState(k){return S.f[k]||(S.f[k]={a:{},i:0,done:false})}
+function fSteps(F,a){return F.steps.filter(s=>!s.when||s.when(a))}
+function fmtAns(s,a){const v=a[s.id];if(s.type==='money') return s.raw?v.toLocaleString('pt-BR'):R0(v);if(s.type==='text') return v||'Não informado';const o=s.opts(a).find(o=>String(o.v)===String(v));return o?o.l:String(v)}
+function vFunnel(k){
+  const F=FUN[k]||(k==='objetivo'?GOALF:null), st=fState(k), steps=fSteps(F,st.a), pre=S.premium&&F.pre?F.pre():{};
+  const carNote=k==='auto'&&S.car?`<p class="small muted">Usando os dados salvos do seu carro: ${S.car.modelo||'carro'} · CEP ${S.car.cep||'não informado'}. <button class="link" data-act="editcar">Editar</button></p>`:'';
+  const summary=steps.slice(0,st.done?steps.length:st.i).map((s,i)=>`<button class="chip" type="button" data-fe="${k}|${i}" title="Alterar">${fmtAns(s,st.a)}</button>`).join('');
+  if(st.done&&F.custom){return `<div class="card"><div class="card-head"><h2>${F.nome}</h2></div><div class="opts">${summary}</div>${F.custom(st.a)}</div>`}
+  if(st.done){
+    const r=F.res(st.a);
+    const recBox=`<div class="rec-box"><div class="card-head"><h3>Indicação da NEO: ${r.rows[r.rec][0]}</h3><span class="chip brand right">Para o seu caso</span></div><ul>${r.why.map(w=>`<li>${w}</li>`).join('')}</ul><p class="small muted">A indicação nunca considera a comissão que a NEO recebe.</p></div>`;
+    return `<div class="card"><div class="card-head"><div><h2>${F.nome}</h2><p class="small muted">${r.sub}</p></div><div class="right btn-row"><button class="btn sec" type="button" data-fr="${k}">Refazer</button></div></div>
+      <div class="opts">${summary}</div><span class="small muted">Toque numa resposta para alterar.</span>${carNote}</div>
+      ${lock(recBox,'Qual faz mais sentido para você?','Saiba qual solução mais se encaixa na sua necessidade. Assine o Premium.')}
+      <div class="card"><div class="card-head"><h2>Comparação</h2><span class="small muted right">Cotações de exemplo · 06/11/2026</span></div>
+      <div class="tbl-box"><table><thead><tr>${r.cols.map((c,i)=>`<th class="${i?'num':''}">${c}</th>`).join('')}<th></th></tr></thead><tbody>
+      ${r.rows.map((row,ri)=>`<tr class="${S.premium&&ri===r.rec?'rec':''}">${row.map((c,i)=>`<td class="${i?'num':''}">${i===0&&S.premium&&ri===r.rec?`<b>${c}</b> <span class="chip brand">Indicada</span>`:c}</td>`).join('')}<td class="num"><button class="btn sec" type="button" data-act="contratar">Contratar</button></td></tr>`).join('')}
+      </tbody></table></div>${r.extra?`<div class="btn-row">${r.extra}</div>`:''}</div>`;
+  }
+  const s=steps[st.i], n=steps.length;
+  let body='';
+  if(s.type==='choice') body=`<div class="fopts">${s.opts(st.a).map(o=>`<button class="fopt ${String(st.a[s.id])===String(o.v)?'sel':''}" type="button" data-fa="${k}|${s.id}|${o.v}"><b>${o.l}</b>${o.sub?`<span class="small muted">${o.sub}</span>`:''}${String(pre[s.id])===String(o.v)?'<span class="chip brand">Pelos seus dados</span>':''}</button>`).join('')}</div>`;
+  else{const val=st.a[s.id]??pre[s.id]??'';
+    body=`<form class="fform" data-ff="${k}|${s.id}|${s.type}"><div class="fin"><input id="fin-${k}" ${s.type==='money'?'inputmode="numeric"':''} type="text" value="${s.type==='money'&&val?Number(val).toLocaleString('pt-BR'):val}" placeholder="${s.ph||(s.raw?'Ex.: 1.000':'Ex.: 65.000')}" autocomplete="off"><button class="btn" type="submit">Continuar</button></div>
+    ${s.sug?`<div class="opts">${s.sug(st.a).map(v=>`<button class="opt" type="button" data-fa="${k}|${s.id}|${v}">${s.raw?v.toLocaleString('pt-BR'):R0(v)}</button>`).join('')}</div>`:''}
+    ${s.type==='text'?`<button class="link" type="button" data-fa="${k}|${s.id}|">Pular por enquanto</button>`:''}</form>`;}
+  return `<div class="card funnel"><div class="card-head"><span class="small muted">${F.nome} · passo ${st.i+1} de ${n}</span>${st.i?`<button class="link right" type="button" data-fb="${k}">Voltar</button>`:''}</div>
+    <div class="prog"><b style="width:${(st.i)/n*100}%"></b></div>
+    ${summary?`<div class="opts">${summary}</div>`:''}${carNote}
+    <h2 style="font-size:1.25rem">${s.q}</h2>${s.help?`<p class="small muted">${s.help}</p>`:''}
+    ${body}
+    ${S.premium&&F.pre&&st.i===0?`<p class="small muted">As opções marcadas "Pelos seus dados" vêm das suas contas e do seu plano.</p>`:''}</div>`;
+}
+function fAnswer(k,id,v){
+  const F=FUN[k]||GOALF, st=fState(k), s=F.steps.find(x=>x.id===id);
+  st.a[id]=s.type==='money'?Number(v):(s.type==='choice'&&/^\d+$/.test(v)?Number(v):v);
+  const steps=fSteps(F,st.a); st.i=steps.findIndex(x=>x.id===id)+1;
+  if(st.i>=steps.length){st.done=true;F.onDone&&F.onDone(st.a)}
+  render();
+}
+const MKT_DESC={consorcio:'Veículos, imóveis, terrenos, máquinas e serviços. Sem juros, com taxa de administração.',financiamento:'Veículo, imóvel ou terreno, comparados pelo CET.',pessoal:'Sem garantia, consignado ou com garantia de veículo ou imóvel.',cartao:'Anuidade, dinheiro de volta, milhas e limite.',vida:'Temporário ou resgatável, para você ou para o casal.',auto:'Cobertura completa, roubo e incêndio ou só terceiros.',previdencia:'PGBL ou VGBL, conforme o seu Imposto de Renda.',cambio:'Espécie, conta global, envio e recebimento.',conta:'Contas sem tarifa, digitais ou com agência.'};
+function vMarket(){
+  const head=`<div class="page-head"><div><h1>Marketplace</h1><p>Conte o que você precisa e compare as ofertas de várias instituições.</p></div></div>`;
+  if(!S.mkt) return `${head}
+  <div class="card"><h2 style="font-size:1.25rem">O que você procura?</h2>
+    <div class="prods">${Object.entries(FUN).map(([k,x])=>`<button class="fopt" type="button" data-mkt="${k}"><b>${x.nome}</b><span class="small muted">${MKT_DESC[k]}</span>${S.f[k]&&S.f[k].done?'<span class="chip">Comparação salva</span>':''}</button>`).join('')}</div>
+    <p class="small muted">Fazemos algumas perguntas antes de mostrar as ofertas, para comparar só o que serve para você.</p></div>
+  ${S.premium?'':`<div class="card" style="background:var(--brand-soft);border-color:transparent"><h3>Saiba qual solução mais se encaixa na sua necessidade</h3><p class="small">No Premium, a NEO indica a melhor oferta para o seu caso e explica os motivos.</p><div><button class="btn" type="button" data-act="assinar">Assinar o Premium</button></div></div>`}`;
+  return `${head}
+  <div class="pills" role="group" aria-label="Produtos"><button class="pill" type="button" data-act="mkt-home">Todos os produtos</button>${Object.entries(FUN).map(([k,x])=>`<button class="pill" type="button" data-mkt="${k}" aria-pressed="${S.mkt===k}">${x.nome}</button>`).join('')}</div>
+  ${vFunnel(S.mkt)}`;
+}
+const GOALF={nome:'Novo objetivo',
+  steps:[
+    {id:'tipo',q:'Qual é o objetivo?',type:'choice',opts:()=>[opt('imovel','Comprar um imóvel'),opt('carro','Trocar de carro'),opt('viagem','Viagem'),opt('estudos','Estudos do Pedro'),opt('outro','Outro objetivo')]},
+    {id:'valor',q:'Quanto custa?',type:'money',sug:a=>({imovel:[80000,120000,200000],carro:[60000,80000,120000],viagem:[10000,20000,40000],estudos:[50000,100000,200000],outro:[5000,20000,50000]})[a.tipo],help:'Para imóvel, informe a entrada que pretende dar.'},
+    {id:'prazo',q:'Em quanto tempo?',type:'choice',opts:()=>[12,24,36,60,120].map(n=>opt(n,n<24?'1 ano':(n/12)+' anos'))},
+    {id:'guardado',q:'Quanto já tem guardado para isso?',type:'money',sug:()=>[0,5000,10000]}
+  ],
+  custom:a=>{
+    const falta=Math.max(0,a.valor-a.guardado), i=0.005, n=a.prazo, sem=falta/n, com=falta*i/(Math.pow(1+i,n)-1), sobra=563.55;
+    const fit=com<=sobra?['Cabe hoje','pos','Sobram '+R(sobra)+' por mês depois dos aportes atuais.']:com<=sobra+3000?['Cabe a partir de julho de 2027','warn','Hoje sobram '+R(sobra)+' por mês. Quando o objetivo do casamento terminar, sobram '+R(sobra+3000)+'.']:['Não cabe no orçamento atual','neg','Alongue o prazo ou reduza o valor. O assistente pode ajudar a ajustar.'];
+    const nome={imovel:'Comprar um imóvel',carro:'Trocar de carro',viagem:'Viagem',estudos:'Estudos do Pedro',outro:'Outro objetivo'}[a.tipo];
+    S.ngRes={nome,valor:a.valor,prazo:n,guardado:a.guardado,aporte:com,fit};
+    return `<div class="grid g3"><div class="kpi"><span class="label">Falta juntar</span><span class="val">${R0(falta)}</span></div><div class="kpi"><span class="label">Aporte por mês, sem rendimento</span><span class="val">${R(sem)}</span></div><div class="kpi"><span class="label">Com rendimento de 0,5% ao mês</span><span class="val">${R(com)}</span><span class="sub">Rendimento de exemplo</span></div></div>
+    <div class="card" style="background:var(--${fit[1]}-soft);border-color:transparent"><b>${fit[0]}</b><span class="small">${fit[2]}</span></div>
+    <div class="btn-row"><button class="btn" type="button" data-act="ng-add">Confirmar e adicionar ao plano</button>${a.tipo==='imovel'||a.tipo==='carro'?`<button class="btn sec" type="button" data-go="marketplace" data-pre="consorcio:mod=${a.tipo==='imovel'?'imovel':'veiculo'},valor=${a.valor},quando=${n>=36?'sem':'medio'},lance=nao">Ver como comprar no Marketplace</button>`:''}<button class="btn sec" type="button" data-act="ng-cancel">Cancelar</button></div>`;
+  }};
+
+/* ---------- janelas: Premium e perfil ---------- */
+const PREMIUM_ITENS=[['Score de saúde financeira','Um número de 0 a 1000, o que pesa nele e o que fazer para subir.'],['Gastos por categoria','Para onde vai o dinheiro, o que está acima do indicado para a renda, assinaturas e parcelamentos.'],['Contas a vencer e alertas','O que vence nos próximos dias e avisos de juros, aumentos e tarifas.'],['Assistente financeiro','Tira dúvidas e ajuda a decidir usando todas as informações da família.'],['Plano financeiro','Objetivos, aposentadoria e acompanhamento mês a mês.'],['Indicação no Marketplace','A oferta que mais se encaixa no seu caso, com os motivos.'],['WhatsApp','Categorize gastos e registre despesas por mensagem ou áudio.']];
+function modalHtml(){
+  const m=S.modal; if(!m) return '';
+  if(m.type==='perfil-all') return perfilCard();
+  if(m.type==='opiniao') return opiniaoHtml();
+  if(m.type==='pend'){const pd=trans.filter(t=>t.cat===null);
+    if(!pd.length) return `<div class="card-head"><h2 style="font-size:1.25rem">Tudo categorizado</h2><button class="link right" type="button" data-act="modal-close">Fechar</button></div><p class="muted">Obrigado. Com os gastos em dia, o score, os alertas e o plano ficam mais precisos.</p><div class="btn-row"><button class="btn" type="button" data-act="modal-close">Voltar para a Home</button></div>`;
+    return `<div class="card-head"><h2 style="font-size:1.25rem">Você tem ${pd.length} ${pd.length>1?'gastos aguardando':'gasto aguardando'} categoria</h2><button class="link right" type="button" data-act="modal-close">Fechar</button></div>
+    <p class="small muted">Escolha a categoria de cada um. Leva poucos segundos e deixa o score, os alertas e o plano mais precisos.</p>
+    <div class="rows">${pd.map(t=>`<div class="row pmrow" style="flex-wrap:wrap"><div class="grow"><div class="t">${R(-t.v)} · ${t.desc}</div><div class="s">${t.d} · ${t.conta}</div></div><div class="opts">${t.sug.map(c=>`<button class="opt" type="button" data-cat="${t.id}|${c}">${c}</button>`).join('')}</div></div>`).join('')}</div>
+    <div class="btn-row"><button class="btn sec" type="button" data-act="modal-close">Fazer depois</button></div>`}
+  if(m.type==='premium') return `<div class="card-head"><h2 style="font-size:1.25rem">NEO Premium</h2><button class="link right" type="button" data-act="modal-close">Fechar</button></div>
+    <p class="muted">No gratuito, você vê seus saldos, analisa seus créditos e compara ofertas. O Premium mostra o que fazer com isso.</p>
+    <div class="rows">${PREMIUM_ITENS.map(i=>`<div class="row"><span class="dot ok"></span><div class="grow"><div class="t">${i[0]}</div><div class="s">${i[1]}</div></div></div>`).join('')}</div>
+    <p class="small muted">Preço a definir. Neste protótipo, o botão abaixo só troca a visão para Premium.</p>
+    <div class="btn-row"><button class="btn" type="button" data-act="assinar-ok">Ver a NEO como Premium</button><button class="btn sec" type="button" data-act="modal-close">Agora não</button></div>`;
+  const p=PERFIL.find(x=>x.id===m.id), edit=m.edit||!pfDone(p);
+  if(edit) return `<div class="card-head"><h2 style="font-size:1.25rem">${p.t}</h2><button class="link right" type="button" data-act="modal-close">Fechar</button></div>
+    <p class="small muted">${p.why}</p>
+    <form id="pfForm" style="display:flex;flex-direction:column;gap:12px">${p.f.map((f,i)=>`<label class="field" for="pf-${i}">${f[0]}<input id="pf-${i}" type="text" value="${f[1]}" autocomplete="off"></label>`).join('')}
+    <div class="btn-row"><button class="btn" type="submit">Salvar</button><button class="btn sec" type="button" data-act="${pfDone(p)?'pf-cancel':'modal-close'}">Cancelar</button></div></form>`;
+  return `<div class="card-head"><h2 style="font-size:1.25rem">${p.t}</h2><button class="link right" type="button" data-act="modal-close">Fechar</button></div>
+    <p class="small muted">${p.why}</p>
+    <div class="dl">${p.f.map(f=>`<span class="muted">${f[0]}</span><span>${f[1]||'<span class="muted">Não informado</span>'}</span>`).join('')}</div>
+    ${p.src?`<p class="small muted">${p.src}</p>`:''}
+    <div class="btn-row"><button class="btn" type="button" data-act="pf-edit">Editar</button><button class="btn sec" type="button" data-act="pf-back">Ver perfil completo</button>${p.mkt?`<button class="btn sec" type="button" data-go="marketplace" data-mkt="${p.mkt}">Comparar no Marketplace</button>`:''}</div>
+    <p class="small muted">Mudou algo na vida da família? Ao editar, o assistente e o plano passam a usar a informação nova.</p>`;
+}
+function closeModal(){S.modal=null;render()}
+
+/* ---------- render e eventos ---------- */
+const VIEWS={home:vHome,gastos:vGastos,score:vScore,assistente:vAssist,plano:vPlano,credito:vCredito,marketplace:vMarket};
+function render(){
+  document.getElementById('nav').innerHTML=TABS.map(t=>`<button class="nav-btn" type="button" data-go="${t.id}" ${S.tab===t.id?'aria-current="page"':''}>${ICON[t.icon]}<span class="lbl">${t.label}</span><span class="lbl-s">${t.sh}</span>${t.premium&&!S.premium?`<span class="lk">${ICON.lock}</span>`:''}</button>`).join('');
+  document.getElementById('pl-free').setAttribute('aria-pressed',!S.premium);
+  document.getElementById('pl-prem').setAttribute('aria-pressed',S.premium);
+  const b=document.getElementById('planBadge');b.textContent=S.premium?'Premium':'Gratuito';b.className='badge-plan'+(S.premium?' premium':'');
+  document.getElementById('topCta').hidden=S.premium;
+  document.body.classList.toggle('fit',S.tab==='home');
+  document.getElementById('view').innerHTML=VIEWS[S.tab]();
+  const mb=document.getElementById('modal');mb.hidden=!S.modal;mb.querySelector('.modal').innerHTML=modalHtml();
+  applyHide();
+  document.querySelectorAll('form[data-ff]').forEach(fm=>fm.addEventListener('submit',e=>{e.preventDefault();const [k,id,t]=fm.dataset.ff.split('|');const raw=fm.querySelector('input').value.trim();if(t==='money'){const n=Number(raw.replace(/\D/g,''));if(!n){toast('Informe um valor.');return}fAnswer(k,id,String(n))}else fAnswer(k,id,raw.replace(/[<>"]/g,''))}));
+  const f=document.getElementById('composer');
+  if(f) f.addEventListener('submit',e=>{e.preventDefault();const i=document.getElementById('ask');if(i.value.trim()) ask(i.value.trim().replace(/[<>]/g,''))});
+  const op=document.getElementById('opForm');
+  if(op) op.addEventListener('submit',e=>{e.preventDefault();enviarOpiniao(op,(e.submitter&&e.submitter.dataset.via)||'wa')});
+  const pf=document.getElementById('pfForm');
+  if(pf) pf.addEventListener('submit',e=>{e.preventDefault();const p=PERFIL.find(x=>x.id===S.modal.id);p.f.forEach((fl,i)=>{fl[1]=document.getElementById('pf-'+i).value.trim().replace(/[<>"]/g,'')});S.modal={type:'perfil',id:p.id};render();toast('Perfil atualizado. O assistente e o plano passam a usar essa informação.')});
+  const sx=document.getElementById('txSearch');
+  if(sx) sx.addEventListener('input',()=>{const q=sx.value.trim().toLowerCase();let n=0;document.querySelectorAll('#view tr[data-text]').forEach(tr=>{const ok=tr.dataset.text.includes(q);tr.hidden=!ok;if(ok)n++});document.getElementById('txEmpty').hidden=n>0});
+}
+function scrollLast(){const l=document.querySelector('.msgs .msg:last-child');if(l) l.scrollIntoView({block:'nearest'})}
+function ask(q){
+  let cv=S.convs.find(c=>c.id===S.conv);
+  if(!cv){cv={id:'n'+(S.convs.length+1),t:q.length>38?q.slice(0,36).trim()+'…':q,d:'Agora',msgs:[]};S.convs.unshift(cv);S.conv=cv.id}
+  const g=parseGoal(q), m={q};
+  if(ANS[q]) m.a=ANS[q]();
+  else if((g.isGoal||cv.wait)&&g.valor){const prazo=g.prazo||24;m.prop=newProp({nome:g.nome==='Novo objetivo'&&cv.wait?cv.wait:g.nome,valor:g.valor,prazo,aporte:g.valor/prazo,intro:g.prazo?null:'Entendi que isso é um objetivo de vocês. Como não veio o prazo, considerei 24 meses.'});cv.wait=null}
+  else if(g.isGoal){cv.wait=g.nome;m.a='<p>Isso parece um objetivo de vocês, e objetivos eu levo para o Plano financeiro. Para fazer a conta, me diga <b>quanto custa</b> e <b>para quando</b> vocês querem. Por exemplo: R$ 30 mil em 2 anos.</p>'}
+  else m.a='<p>Neste protótipo, só as perguntas sugeridas e os objetivos têm resposta de exemplo. Na versão real, eu consultaria as contas, o perfil e o plano de vocês para responder, e mostraria de onde vem cada número.</p>';
+  cv.msgs.push(m);render();scrollLast();const i=document.getElementById('ask');if(i) i.focus({preventScroll:true});
+}
+/* Home nova: o Premium vê o aviso de gastos sem categoria toda vez que abre a Home */
+function pendPop(){if(S.popShown) return;if(S.tab==='home'&&S.premium&&trans.some(t=>t.cat===null)){S.modal={type:'pend'};S.popShown=true}}
+function go(tab){if(!VIEWS[tab]) tab='home';if(tab==='score'){S.scV='resumo';S.scM=null}S.tab=tab;S.modal=null;pendPop();if(location.hash!=='#'+tab) history.replaceState(null,'','#'+tab);render();window.scrollTo(0,0);trackTab(tab)}
+function setPlan(p){S.premium=p;S.txAll=false;store.set('neo-plan',p?'premium':'free');S.modal=null;S.popShown=false;pendPop();render()}
+
+document.addEventListener('click',e=>{
+  if(e.target.id==='modal'){closeModal();return}
+  const el=e.target.closest('button,[data-go]');if(!el) return;
+  const ds=el.dataset;
+  if(ds.pre){const [k,q]=ds.pre.split(':');const a={};q.split(',').forEach(kv=>{const [x,y]=kv.split('=');a[x]=/^\d+$/.test(y)?Number(y):y});S.f[k]={a,i:0,done:true};}
+  if(ds.fa){const [k,id,v]=ds.fa.split('|');fAnswer(k,id,v);return}
+  if(ds.fb){const st=fState(ds.fb);st.i=Math.max(0,st.i-1);render();return}
+  if(ds.fr){S.f[ds.fr]={a:{},i:0,done:false};render();return}
+  if(ds.fe){const [k,i]=ds.fe.split('|');const st=fState(k);st.done=false;st.i=Number(i);render();return}
+  if(ds.gtab){S.gTab=ds.gtab;if(!ds.go){render();return}}
+  if(ds.conv){S.conv=ds.conv;render();return}
+  if(ds.scm){S.scM=Number(ds.scm);render();return}
+  if(ds.scv){S.scV=ds.scv;render();window.scrollTo(0,0);return}
+  if(ds.keep){const [id,k]=ds.keep.split('|');S.props[id].keep[k]=!S.props[id].keep[k];render();return}
+  if(ds.pf){S.modal={type:'perfil',id:ds.pf};render();return}
+  if(ds.mkt){S.mkt=ds.mkt; if(!ds.go){render();return}}
+  if(ds.go){go(ds.go);return}
+  if(ds.debt){S.debt=ds.debt;render();return}
+  if(ds.cat){const [id,c]=ds.cat.split('|');const t=trans.find(x=>x.id==id);t.cat=c;render();toast('Categoria salva: '+c+'. A pergunta no WhatsApp foi encerrada.');return}
+  if(ds.seg){S.perfilSeguro=ds.seg;if(ds.seg!=='depois'){PERFIL.find(p=>p.id==='vida').f[0][1]=ds.seg;toast('Resposta registrada no perfil da família.')}render();return}
+  if(ds.ask){ask(ds.ask);return}
+  const a=ds.act;
+  if(a==='assinar'){S.modal={type:'premium'};render();return}
+  if(a==='opiniao'){S.modal={type:'opiniao'};render();return}
+  if(a==='assinar-ok'){setPlan(true);toast('Protótipo: agora você está vendo a NEO como usuário Premium.');return}
+  if(a==='modal-close'){closeModal();return}
+  if(a==='pf-edit'){S.modal.edit=true;render();return}
+  if(a==='pf-cancel'){S.modal.edit=false;render();return}
+  if(a==='pf-back'){S.modal={type:'perfil-all'};render();return}
+  if(a==='mkt-home'){S.mkt=null;render();return}
+  if(a==='cas-aumentar'){S.casamento='aumentar';render();toast('Plano atualizado: aportes de R$ 3.375,00 até junho.');return}
+  if(a==='cas-adiar'){S.casamento='adiar';render();toast('Plano atualizado: casamento em julho de 2027.');return}
+  if(a==='editcar'){S.car=null;S.f.auto={a:{},i:0,done:false};render();return}
+  if(a==='ng-open'){S.ngOpen=true;S.f.objetivo={a:{},i:0,done:false};render();return}
+  if(a==='ng-cancel'){S.ngOpen=false;render();return}
+  if(a==='ng-add'){S.goals.push(S.ngRes);S.ngOpen=false;render();toast('Objetivo adicionado ao plano.');return}
+  if(a==='objcarro'){const cv=S.convs.find(c=>c.id==='carro');if(!cv.msgs.some(m=>m.prop&&S.props[m.prop].parcela&&S.props[m.prop].state!=='no')) cv.msgs.push({prop:newProp({nome:'Trocar de carro (consórcio)',valor:65000,prazo:80,aporte:65000*1.13/80,parcela:true,intro:'Trocar de carro é um objetivo de vocês, então ele entra no plano como consórcio sem lance.'})});render();scrollLast();return}
+  if(a==='conv-new'){S.conv=null;render();const i=document.getElementById('ask');if(i) i.focus();return}
+  if(a==='prop-ok'){propConfirm(ds.id);go('plano');toast('Objetivo levado para o Plano financeiro.');return}
+  if(a==='prop-no'){S.props[ds.id].state='no';render();return}
+  if(a==='pend-open'){S.modal={type:'pend'};render();return}
+  if(a==='pf-all'){S.modal={type:'perfil-all'};render();return}
+  if(a==='note-x'){S.planNote=null;render();return}
+  if(a==='on-cas'||a==='on-ap'||a==='on-res'){S.off[a.slice(3)]=false;render();toast('Objetivo reativado.');return}
+  if(a==='on-g'){S.goals[Number(ds.i)].off=false;render();toast('Objetivo reativado.');return}
+  if(a==='cas-reset'){S.casamento=null;render();return}
+  if(a==='ap-aporte'||a==='ap-idade'||a==='ap-misto'){S.aposentadoria=a.slice(3);render();toast('Plano de aposentadoria atualizado.');return}
+  if(a==='ap-reset'){S.aposentadoria=null;render();return}
+  const msgs={portab:'Protótipo: o pedido de portabilidade seria enviado ao Banco Delta, com a sua confirmação.',reneg:'Protótipo: a proposta de renegociação seria enviada ao seu banco.',juridico:'Protótipo: o caso seria encaminhado a um advogado parceiro, com o seu consentimento.',upload:'Protótipo: aqui a pessoa escolhe o arquivo do contrato.',contratar:'Protótipo: a contratação abriria o fluxo da instituição parceira.'};
+  if(msgs[a]) toast(msgs[a]);
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.modal) closeModal()});
+
+/* ---------- olho: ocultar valores ---------- */
+S.hide=store.get('neo-hide')==='1';
+function maskText(t){return t.replace(/R\$\s?[\d.]+(,\d+)?/g,'R$ •••').replace(/\b\d+(,\d+)?\s?mil\b/g,'••• mil')}
+function applyHide(){
+  document.body.classList.toggle('hide-vals',S.hide);
+  const b=document.getElementById('eyeBtn');if(b){b.innerHTML=S.hide?ICON.eyeOff:ICON.eye;b.setAttribute('aria-pressed',S.hide);const l=S.hide?'Mostrar valores':'Ocultar valores';b.setAttribute('aria-label',l);b.title=l}
+  if(!S.hide) return;
+  [document.getElementById('view'),document.querySelector('#modal .modal')].forEach(root=>{if(!root) return;
+    const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){const v=n.nodeValue;if(/R\$|\bmil\b/.test(v)){const m=maskText(v);if(m!==v) n.nodeValue=m}}
+    root.querySelectorAll('[title]').forEach(el=>{el.title=maskText(el.title)});
+  });
+}
+document.getElementById('eyeBtn').addEventListener('click',()=>{S.hide=!S.hide;store.set('neo-hide',S.hide?'1':'0');render()});
+
+/* ---------- deslizar o dedo para trocar de tela, na ordem da barra inferior ---------- */
+let swp=null;
+function hScroll(el){while(el&&el!==document.body){if(el.scrollWidth>el.clientWidth+4&&/auto|scroll/.test(getComputedStyle(el).overflowX)) return true;el=el.parentElement}return false}
+document.addEventListener('touchstart',e=>{swp=null;if(S.modal||e.touches.length>1) return;const t=e.target,p=e.touches[0];
+  if(p.clientX<24||p.clientX>window.innerWidth-24) return;
+  if(t.closest('input,textarea,select,.side,[data-noswipe]')||hScroll(t)) return;
+  swp={x:p.clientX,y:p.clientY,t:Date.now()}},{passive:true});
+document.addEventListener('touchend',e=>{if(!swp) return;const p=e.changedTouches[0],dx=p.clientX-swp.x,dy=p.clientY-swp.y,dt=Date.now()-swp.t;swp=null;
+  if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.8||dt>800) return;
+  const ids=TABS.map(t=>t.id),j=ids.indexOf(S.tab)+(dx<0?1:-1);if(j<0||j>=ids.length) return;
+  go(ids[j]);const v=document.getElementById('view');v.classList.remove('sw-l','sw-r');void v.offsetWidth;v.classList.add(dx<0?'sw-l':'sw-r')},{passive:true});
+
+document.getElementById('pl-free').addEventListener('click',()=>setPlan(false));
+document.getElementById('pl-prem').addEventListener('click',()=>setPlan(true));
+
+const root=document.documentElement, mq=window.matchMedia('(prefers-color-scheme: dark)');
+function isDark(){const t=root.getAttribute('data-theme');return t?t==='dark':mq.matches}
+function syncThemeBtn(){document.getElementById('themeBtn').textContent=isDark()?'Tema claro':'Tema escuro'}
+const savedTheme=store.get('neo-theme'); if(savedTheme==='dark'||savedTheme==='light') root.setAttribute('data-theme',savedTheme);
+document.getElementById('themeBtn').addEventListener('click',()=>{const t=isDark()?'light':'dark';root.setAttribute('data-theme',t);store.set('neo-theme',t);syncThemeBtn()});
+mq.addEventListener&&mq.addEventListener('change',syncThemeBtn);
+syncThemeBtn();
+
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(h!==S.tab) go(h)});
+/* ---------- rastreamento de uso: só no endereço próprio (GitHub Pages) e com a chave do PostHog ---------- */
+const PH={key:'',host:'https://us.i.posthog.com'};
+const TRACK=!!PH.key&&/\.github\.io$/.test(location.hostname);
+let tabCur=null,tabT0=Date.now();
+function track(ev,props){if(TRACK&&window.posthog) window.posthog.capture(ev,Object.assign({plano:S.premium?'premium':'gratuito'},props||{}))}
+function tabTime(){if(tabCur) track('tempo_na_tela',{tela:tabCur,segundos:Math.round((Date.now()-tabT0)/1000)})}
+function trackTab(tab){if(!TRACK||tab===tabCur) return;tabTime();tabCur=tab;tabT0=Date.now();track('$pageview',{tela:tab,$current_url:location.origin+location.pathname+'#'+tab})}
+if(TRACK){
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister identify alias people.set people.set_once set_config reset opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing get_distinct_id get_property".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  window.posthog.init(PH.key,{api_host:PH.host,capture_pageview:false,autocapture:true,person_profiles:'always',
+    session_recording:{maskAllInputs:true,maskTextFn:t=>maskText(t)}});
+  document.addEventListener('click',e=>{const el=e.target.closest('button,a,[data-go]');if(!el) return;
+    track('clique',{tela:S.tab,botao:(el.getAttribute('aria-label')||(el.querySelector('.lbl')||el).textContent||'').trim().replace(/\s+/g,' ').slice(0,60),destino:el.dataset.go||el.dataset.act||null})},true);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){tabTime();tabT0=Date.now()}});
+  const db=document.querySelector('.demo-bar span');if(db) db.textContent+=' Para melhorar a NEO, registramos de forma anônima as telas e os botões usados.';
+}
+/* sempre abre na Home, mesmo que o link venha com outra aba */
+go('home');
+})();
+</script>
