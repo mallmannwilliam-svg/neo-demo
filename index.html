@@ -1032,7 +1032,7 @@ function vHome(){
   const pendC=`<div class="card hc pstrip">${pend.length?`<span class="ps-t"><span class="chip brand">${pend.length}</span><b>Gastos aguardando categoria</b></span><div class="ps-l">${pend.slice(0,2).map(t=>`<div class="ps-i"><span class="t1"><b>${R(-t.v)}</b> · ${t.desc}</span><span class="opts">${t.sug.map(c=>`<button class="opt" type="button" data-cat="${t.id}|${c}">${c}</button>`).join('')}</span></div>`).join('')}</div><button class="btn ps-b" type="button" data-act="pend-open">${pend.length>2?`Ver todos (${pend.length})`:'Categorizar'}</button>`:`<span class="ps-t"><span class="chip pos">0</span><b>Tudo categorizado.</b></span><span class="small muted">Os próximos gastos sem categoria aparecem aqui e no WhatsApp.</span>`}</div>`;
   const alertC=`<div class="card hc">${hd('Alertas')}<div class="fl">
     <div class="li"><span class="chip neg">Juros</span><span class="t1 grow" title="Cartão Alfa no rotativo: R$ 612,40 de juros em outubro">Rotativo do Alfa: R$ 612,40 em outubro</span><button class="link" data-go="credito">Analisar</button></div>
-    <div class="li"><span class="chip warn">Tarifa</span><span class="t1 grow" title="Pacote de serviços do Banco Alfa custa R$ 514,80 por ano">Pacote do Alfa: R$ 514,80 por ano</span><button class="link" data-go="marketplace" data-mkt="conta">Comparar</button></div>
+    <div class="li"><span class="chip warn">Tarifa</span><span class="t1 grow" title="Pacote de serviços do Banco Alfa custa R$ 514,80 por ano">Pacote do Alfa: R$ 514,80 por ano</span></div>
     <div class="li"><span class="chip warn">Aumento</span><span class="t1 grow" title="Energia 18% acima da média de 3 meses">Energia 18% acima da média</span></div>
     <div class="li"><span class="chip warn">Assinatura</span><span class="t1 grow" title="App de idiomas subiu de R$ 29,90 para R$ 38,10">App de idiomas subiu para R$ 38,10</span><button class="link" data-go="gastos" data-gtab="assinaturas">Ver</button></div>
     <div class="li"><span class="chip brand">Vence</span><span class="t1 grow" title="Fatura do cartão Alfa vence em 15/11">Fatura do Alfa vence dia 15/11: R$ 6.842,30</span><button class="link" data-go="gastos" data-gtab="geral">Ver contas</button></div>
@@ -1588,13 +1588,6 @@ const FUN={
       return {sub:(a.op==='rec'?'Receber ':'')+a.valor.toLocaleString('pt-BR')+' '+a.moeda,cols:['Instituição','Cotação','IOF','Tarifa',a.op==='rec'?'Você recebe':'Valor efetivo total'],rows,rec:0,
         why:['Indicamos pelo valor efetivo total, que soma cotação, tarifas e IOF. '+rows[0][0]+' é '+(a.op==='rec'?'onde você recebe mais':'a mais barata')+'.','O IOF é de exemplo neste protótipo.']};
     }},
-  conta:{nome:'Conta bancária',
-    steps:[
-      {id:'uso',q:'Do que você precisa na conta?',type:'choice',opts:()=>[opt('dig','Só Pix, cartão de débito e app'),opt('ag','Preciso de agência física'),opt('conj','Conta conjunta do casal')]}
-    ],
-    res:a=>({sub:{dig:'Conta digital',ag:'Conta com agência',conj:'Conta conjunta'}[a.uso],cols:['Instituição','Tarifa mensal','Agência física','Conta conjunta','Saques grátis por mês'],
-      rows:[['Banco Delta Digital','Grátis','Não','Sim','4'],['Banco Épsilon','Grátis','Não','Não','2'],['Banco Alfa Serviços Essenciais','Grátis','Sim','Sim','4'],['Banco Alfa Pacote Plus','R$ 42,90','Sim','Sim','Ilimitados']],
-      rec:a.uso==='ag'?2:0,why:[a.uso==='ag'?'Todo banco é obrigado pelo BCB a oferecer um pacote de serviços essenciais sem tarifa. No Banco Alfa, isso dá para trocar o pacote atual sem mudar de banco.':'Uma conta digital sem tarifa resolve Pix, débito e app, e permite conta conjunta.',S.premium?'Vocês pagam R$ 42,90 por mês no pacote do Banco Alfa, R$ 514,80 por ano.':'Compare a tarifa com o que você paga hoje.']})}
 };
 
 function fState(k){return S.f[k]||(S.f[k]={a:{},i:0,done:false})}
@@ -1637,7 +1630,7 @@ function fAnswer(k,id,v){
   if(st.i>=steps.length){st.done=true;F.onDone&&F.onDone(st.a)}
   render();
 }
-const MKT_DESC={consorcio:'Veículos, imóveis, terrenos, máquinas e serviços. Sem juros, com taxa de administração.',financiamento:'Veículo, imóvel ou terreno, comparados pelo CET.',pessoal:'Sem garantia, consignado ou com garantia de veículo ou imóvel.',cartao:'Anuidade, dinheiro de volta, milhas e limite.',vida:'Temporário ou resgatável, para você ou para o casal.',auto:'Cobertura completa, roubo e incêndio ou só terceiros.',previdencia:'PGBL ou VGBL, conforme o seu Imposto de Renda.',cambio:'Espécie, conta global, envio e recebimento.',conta:'Contas sem tarifa, digitais ou com agência.'};
+const MKT_DESC={consorcio:'Veículos, imóveis, terrenos, máquinas e serviços. Sem juros, com taxa de administração.',financiamento:'Veículo, imóvel ou terreno, comparados pelo CET.',pessoal:'Sem garantia, consignado ou com garantia de veículo ou imóvel.',cartao:'Anuidade, dinheiro de volta, milhas e limite.',vida:'Temporário ou resgatável, para você ou para o casal.',auto:'Cobertura completa, roubo e incêndio ou só terceiros.',previdencia:'PGBL ou VGBL, conforme o seu Imposto de Renda.',cambio:'Espécie, conta global, envio e recebimento.'};
 function vMarket(){
   const head=`<div class="page-head"><div><h1>Marketplace</h1><p>Conte o que você precisa e compare as ofertas de várias instituições.</p></div></div>`;
   if(!S.mkt) return `${head}
