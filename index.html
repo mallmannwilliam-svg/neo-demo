@@ -711,6 +711,10 @@ body.hide-vals .cents{display:none}
 @media (max-width:760px){.side .nav-btn .lk{background:#3A3F45;color:#F2F4F5;top:3px}.side .nav-btn[aria-current="page"] .lk{background:#0B0D0F;color:#1AE299}
   .hm.v2{grid-template-areas:"saldo saldo" "chart chart" "score score" "alert alert" "pend pend" "tx tx" "k1 k2" "k3 k4" "cart cart"!important}
   .top>.who{display:flex;gap:8px;align-items:center}.eye-btn{width:36px;height:36px}}
+.rb-c[data-chm]{cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:10px}
+.rb-c[data-chm]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (hover:hover){.rb-c[data-chm]:not(.on):hover i{filter:brightness(.93)}}
+@media (max-width:760px){.hm.v2 .rb-v{font-size:.66rem;letter-spacing:-.01em}.hm.v2 .rb-c.on .rb-v{padding:2px 5px}.hm.v2 .rb{gap:4px}}
 </style>
 
 <div class="app">
@@ -1024,10 +1028,10 @@ function vHome(){
     <div class="col" style="gap:10px">${cartoes.map(c=>{const d=(c.usado-c.media)/c.media*100;return `<div><div class="li0"><span class="grow"><b>${c.nome.replace("Banco ","")}</b></span><b>${R(c.usado)}</b></div><div class="prog" style="margin:5px 0"><b style="width:${c.usado/c.limite*100}%"></b></div><div class="li0 small"><span class="grow muted">Vence ${c.venc}</span>${d>10?`<button class="link warn" style="font-size:.78rem" data-go="gastos">${P(d,0)}% acima da média</button>`:`<span class="muted">Dentro da média</span>`}</div></div>`}).join('')}</div></div>`;
   const maxM=Math.max(...meses.flatMap(m=>[m[1],m[2]]));
   /* Home nova: resultado de cada mês (entradas menos saídas), positivo para cima e negativo para baixo */
-  const res=meses.map(m=>m[1]-m[2]), maxR=Math.max(...res.map(Math.abs)), lastM=meses.length-1, k=v=>P(v/1000,1)+' mil';
+  const res=meses.map(m=>m[1]-m[2]), maxR=Math.max(...res.map(Math.abs)), lastM=meses.length-1, k=v=>P(v/1000,1)+' mil',selM=(S.chM!=null&&S.chM<meses.length)?S.chM:lastM;
   const chart=`<div class="card hc">${hd('Receitas e despesas','<span class="legend"><span><i style="background:var(--accent)"></i>Sobrou</span><span><i style="background:var(--neg)"></i>Faltou</span></span>')}
-    <div class="rb">${meses.map((m,i)=>{const v=res[i],h=Math.abs(v)/maxR*100;return `<div class="rb-c${i===lastM?' on':''}" title="${m[0]}: entradas ${R(m[1])}, saídas ${R(m[2])}"><span class="rb-up">${v>=0?`<b class="rb-v">+${R0(v)}</b><i class="pos" style="height:${h}%"></i>`:''}</span><span class="rb-dn">${v<0?`<i class="neg" style="height:${h}%"></i><b class="rb-v neg">-${R0(-v)}</b>`:''}</span><span class="rb-m">${m[0]}</span><span class="rb-s">${k(m[1])} · ${k(m[2])}</span></div>`}).join('')}</div>
-    <p class="small t1" style="font-weight:400"><span class="muted">Passe o mouse ou toque no mês para ver entradas e saídas. Em outubro, os gastos ficaram 29% acima de setembro.</span></p></div>`;
+    <div class="rb">${meses.map((m,i)=>{const v=res[i],h=Math.abs(v)/maxR*100;return `<div class="rb-c${i===selM?' on':''}" data-chm="${i}" role="button" tabindex="0" aria-pressed="${i===selM}" aria-label="${m[0]}: entradas ${R(m[1])}, saídas ${R(m[2])}" title="${m[0]}: entradas ${R(m[1])}, saídas ${R(m[2])}"><span class="rb-up">${v>=0?`<b class="rb-v">+${R0(v)}</b><i class="pos" style="height:${h}%"></i>`:''}</span><span class="rb-dn">${v<0?`<i class="neg" style="height:${h}%"></i><b class="rb-v neg">-${R0(-v)}</b>`:''}</span><span class="rb-m">${m[0]}</span><span class="rb-s">${k(m[1])} · ${k(m[2])}</span></div>`}).join('')}</div>
+    <p class="small t1 rb-det" style="font-weight:400"><b>${meses[selM][0]}:</b> entradas ${R(meses[selM][1])} · saídas ${R(meses[selM][2])} · ${res[selM]>=0?'sobrou':'faltou'} ${R(Math.abs(res[selM]))}<br><span class="muted">${selM===lastM?'Em outubro, os gastos ficaram 29% acima de setembro. ':''}Toque em outro mês para ver os valores dele.</span></p></div>`;
   const pend=trans.filter(t=>t.cat===null);
   const pendC=`<div class="card hc pstrip">${pend.length?`<span class="ps-t"><span class="chip brand">${pend.length}</span><b>Gastos aguardando categoria</b></span><div class="ps-l">${pend.slice(0,2).map(t=>`<div class="ps-i"><span class="t1"><b>${R(-t.v)}</b> · ${t.desc}</span><span class="opts">${t.sug.map(c=>`<button class="opt" type="button" data-cat="${t.id}|${c}">${c}</button>`).join('')}</span></div>`).join('')}</div><button class="btn ps-b" type="button" data-act="pend-open">${pend.length>2?`Ver todos (${pend.length})`:'Categorizar'}</button>`:`<span class="ps-t"><span class="chip pos">0</span><b>Tudo categorizado.</b></span><span class="small muted">Os próximos gastos sem categoria aparecem aqui e no WhatsApp.</span>`}</div>`;
   const alertC=`<div class="card hc">${hd('Alertas')}<div class="fl">
@@ -1807,6 +1811,8 @@ document.addEventListener('touchend',e=>{if(!swp) return;const p=e.changedTouche
   const ids=TABS.map(t=>t.id),j=ids.indexOf(S.tab)+(dx<0?1:-1);if(j<0||j>=ids.length) return;
   go(ids[j]);const v=document.getElementById('view');v.classList.remove('sw-l','sw-r');void v.offsetWidth;v.classList.add(dx<0?'sw-l':'sw-r')},{passive:true});
 
+document.addEventListener('click',e=>{const c=e.target.closest('[data-chm]');if(!c) return;S.chM=Number(c.dataset.chm);render()});
+document.addEventListener('keydown',e=>{const c=e.target.closest&&e.target.closest('[data-chm]');if(!c||(e.key!=='Enter'&&e.key!==' ')) return;e.preventDefault();S.chM=Number(c.dataset.chm);render();const n=document.querySelector('[data-chm="'+c.dataset.chm+'"]');n&&n.focus()});
 document.getElementById('pl-free').addEventListener('click',()=>setPlan(false));
 document.getElementById('pl-prem').addEventListener('click',()=>setPlan(true));
 
